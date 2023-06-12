@@ -1,30 +1,88 @@
 
 <html>
 <head>
-  <title>PSPDFKit Viewer</title>
+  <title>PSPDFKit Sync Scrolling</title>
 </head>
+<style>
+  #viewer-container {
+    display: flex;
+    height: 100vh;
+  }
+
+  #viewer-container > div {
+    width: 50%;
+    height: 100%;
+  }
+</style>
 <body>
   <div id="root"></div>
 
   <script src="./assets/pspdfkit.js"></script>
-  <div id="pspdfkit" style="width: 100%; height: 100vh;"></div>
+  <div id="viewer-container">
+    <div id="pspdfkitLeft"></div>
+    <div id="pspdfkitRight"></div>
+  </div>
 
 
   <script>
 
     PSPDFKit.load({
-      container: "#pspdfkit",
-      document: "./PDF poem v3.pdf"
+      container: "#pspdfkitLeft",
+      document: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/The+Magnificent+Agreement+Regarding+the+History+of+the+Portable+Document+Format.pdf"
     })
     .then(async function(instance) {
-      console.log("PSPDFKit loaded", instance);
+      console.log("PSPDFKit Left loaded", instance);
+      leftViewer = instance;
 
-     
-      
+      // Add event listeners for the left viewer to sync its state to the right viewer
+      let scrollElement = instance.contentDocument.querySelector(".PSPDFKit-Scroll");
+      scrollElement.addEventListener("scroll", syncViewState);
+      instance.addEventListener("viewState.change.currentPageIndex", syncViewState);
+      instance.addEventListener("viewState.change.zoom", syncViewState);
+
     })
     .catch(function(error) {
       console.error(error.message);
     });
+
+    PSPDFKit.load({
+      container: "#pspdfkitRight",
+      document: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/The+Magnificent+Agreement+Regarding+the+History+of+the+Portable+Document+Format.pdf"
+    })
+    .then(async function(instance) {
+      console.log("PSPDFKit Right loaded", instance);
+      rightViewer = instance;
+
+    })
+    .catch(function(error) {
+      console.error(error.message);
+    });
+
+    function syncViewState() {
+
+      // This is the data that needs to be send over to the other
+      // viewer, e.g. via WebSockets.
+      
+      // Get the current view state from the left viewer
+      let customViewState = {
+        pageNumber: leftViewer.viewState.currentPageIndex,
+        zoomLevel: leftViewer.viewState.zoom,
+        scrollLeft: leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll").scrollLeft,
+        scrollTop: leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll").scrollTop,
+      };
+    
+      // Set the page number
+      let viewState = rightViewer.viewState;
+      rightViewer.setViewState(viewState.set("currentPageIndex", customViewState.pageNumber));
+    
+      // Set the zoom level
+      rightViewer.setViewState(viewState.set("zoom", customViewState.zoomLevel));
+    
+      // Set scroll position
+      let scrollElement = rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
+      scrollElement.scrollLeft = customViewState.scrollLeft;
+      scrollElement.scrollTop = customViewState.scrollTop;
+    }
   </script>
 
  
