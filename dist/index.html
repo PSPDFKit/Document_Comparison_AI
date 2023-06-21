@@ -37,11 +37,11 @@
 
       // Add event listeners for the left viewer to sync its state to the right viewer
       let scrollElement = leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
-      scrollElement.addEventListener("scroll", syncViewState);
+      scrollElement.addEventListener("scroll", syncViewStateLeft);
 
       // TODO: Needed when viewer is in single page mode
       //instance.addEventListener("viewState.currentPageIndex.change", syncViewState);
-      instance.addEventListener("viewState.zoom.change", syncViewState);
+      instance.addEventListener("viewState.zoom.change", syncViewStateLeft);
 
     })
     .catch(function(error) {
@@ -58,21 +58,21 @@
       rightViewer = instance;
 
       let scrollElement = rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
-      scrollElement.addEventListener("scroll", syncViewState2);
+      scrollElement.addEventListener("scroll", syncViewStateRight);
 
       // TODO: Needed when viewer is in single page mode
       //instance.addEventListener("viewState.currentPageIndex.change", syncViewState2);
-      instance.addEventListener("viewState.zoom.change", syncViewState2);
+      instance.addEventListener("viewState.zoom.change", syncViewStateRight);
 
     })
     .catch(function(error) {
       console.error(error.message);
     });
 
-    function syncViewState() {
+    function syncViewStateLeft() {
 
       let scrollElementR = rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
-      scrollElementR.removeEventListener("scroll", syncViewState2);
+      scrollElementR.removeEventListener("scroll", syncViewStateRight);
 
       // This is the data that needs to be send over to the other
       // viewer, e.g. via WebSockets.
@@ -98,14 +98,14 @@
       scrollElement.scrollTop = customViewState.scrollTop;
 
       window.setTimeout(() => {
-        scrollElementR.addEventListener("scroll", syncViewState2);
+        scrollElementR.addEventListener("scroll", syncViewStateRight);
       }, 0);
     }
 
-    function syncViewState2() {
+    function syncViewStateRight() {
 
       let scrollElementL = leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
-      scrollElementL.removeEventListener("scroll", syncViewState);
+      scrollElementL.removeEventListener("scroll", syncViewStateLeft);
 
       // This is the data that needs to be send over to the other
       // viewer, e.g. via WebSockets.
@@ -131,7 +131,7 @@
       scrollElement.scrollTop = customViewState.scrollTop;
 
       window.setTimeout(() => {
-        scrollElementL.addEventListener("scroll", syncViewState);
+        scrollElementL.addEventListener("scroll", syncViewStateLeft);
       }, 0);
       
     }
