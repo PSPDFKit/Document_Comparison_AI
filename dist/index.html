@@ -29,19 +29,19 @@
     PSPDFKit.load({
       container: "#pspdfkitLeft",
       document: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/The+Magnificent+Agreement+Regarding+the+History+of+the+Portable+Document+Format.pdf",
-      licenseKey:
-      "vCR5dwIXsXHZsHQoufWEefkm8URHmt9zBymfQ5rWYpggjx_xYADpAXOHYxcdt_PbwurRb_c52uN5BrbRl0ta5wnVrcTnfSM4jASkm6QuPPiuhEI0xdglf_s-V-4aFMCK9u9XT0vJ3XPU4zyiMdem6Wd5sNvUEfP_fWPsbm1DnRMAJJl3vmXshBTlGtjlJYXwNn69OkOq6K9q7qGFHIx95iCXSQLSjRfpyEtWr0wjwLlUykC7tIt9qX8oGO-STn6hplnJzRWRFs_EdP4-YqzcLMaaY-GMKnOUSU5wrThJ7Bb6LJEWBTRX2XraeB6UFqM0rwMqcso8CnoDq1l3Qn_aNZS_6wmcj3K1azVL8NuMyBmu87nwzwlegvXjSqWIXHptd_FUqXX3Npze4CymDYNoRJuJy8s3bv1ikBvXkMKwQR8d1ayy8fs9tzcRyWamyzfzsCNjv1duLSGIkluTxIZMeYU2hd3nsFsFY7Bnot2MLGZI2udJ7iIFTx3QBS_zRFdQjJ_FLl9viOFVtjG_Rklfzqvn2675leoU7de7DBUOnUWQk8oZRUAvMmber1GzORnKeE1M37Wd5YxS20tQYrjRNr0BdaTOMEUshCyCI1EEjWrCy_zdlng2l2jZtrlYZkNsEwiGz8Cvn9UtmgVHg0UQPfzDYB8tk7Hv51rh5RR9xEllaFZMc82py7G_GjSHIRLyKJWiD_eaHbWxPEnzZszNhmqpA6Jx4Y-jVAPE-bub3LG6dd5nfzCHlbMOJTiNPHrSayPmX3QRTV14MpDcyRu8uZGhalXvx3IYcMPx_SLEXattbzdcT6OWH6nFmmrztq63pJ2IgnfDbeZ0XlarWKu0SYEMAq8fBl41tFFVYdztD6PU2qULlY3SyTQyL_FnQxw4oSgFTBXeyr80Mlj03FZf710WxYF1-JuWUQq4GlOlknuXqmVdjgCF4R__lKm0IPr0xCvTq4r5f9t7zXP3LT12QcQ5QtRXPi6By11pZMkTlKGbfzRbDuf2ksVAMhOSuPmYf3C-xZBdPGvm6r95ltSFxIdYNILrwJ2IjYs2RW3JxDWFpwK4MYpEiADzQP3SiKBgqKncfTcInoFmd5kM8mFddavDbw4uoaNLIUaSXphq_qgucHk5LQP7sHFjzfqVVWxYR_U6_NUZyvpUn-1Wv6YO9K5JzeR-lnCTxOxPIE-iA01qDhj2lZ-sJYy_zK0D19uPk9b8agtDudqWlQPebCtc6cHpfe3Wq16rlwiFheL4pVI=",
-  
+
     })
     .then(async function(instance) {
       console.log("PSPDFKit Left loaded", instance);
       leftViewer = instance;
 
       // Add event listeners for the left viewer to sync its state to the right viewer
-      let scrollElement = instance.contentDocument.querySelector(".PSPDFKit-Scroll");
+      let scrollElement = leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
       scrollElement.addEventListener("scroll", syncViewState);
-      instance.addEventListener("viewState.change.currentPageIndex", syncViewState);
-      instance.addEventListener("viewState.change.zoom", syncViewState);
+
+      // TODO: Needed when viewer is in single page mode
+      //instance.addEventListener("viewState.currentPageIndex.change", syncViewState);
+      instance.addEventListener("viewState.zoom.change", syncViewState);
 
     })
     .catch(function(error) {
@@ -51,13 +51,18 @@
     PSPDFKit.load({
       container: "#pspdfkitRight",
       document: "https://pj-document-bucket.s3.ca-central-1.amazonaws.com/The+Magnificent+Agreement+Regarding+the+History+of+the+Portable+Document+Format.pdf",
-      licenseKey:
-      "vCR5dwIXsXHZsHQoufWEefkm8URHmt9zBymfQ5rWYpggjx_xYADpAXOHYxcdt_PbwurRb_c52uN5BrbRl0ta5wnVrcTnfSM4jASkm6QuPPiuhEI0xdglf_s-V-4aFMCK9u9XT0vJ3XPU4zyiMdem6Wd5sNvUEfP_fWPsbm1DnRMAJJl3vmXshBTlGtjlJYXwNn69OkOq6K9q7qGFHIx95iCXSQLSjRfpyEtWr0wjwLlUykC7tIt9qX8oGO-STn6hplnJzRWRFs_EdP4-YqzcLMaaY-GMKnOUSU5wrThJ7Bb6LJEWBTRX2XraeB6UFqM0rwMqcso8CnoDq1l3Qn_aNZS_6wmcj3K1azVL8NuMyBmu87nwzwlegvXjSqWIXHptd_FUqXX3Npze4CymDYNoRJuJy8s3bv1ikBvXkMKwQR8d1ayy8fs9tzcRyWamyzfzsCNjv1duLSGIkluTxIZMeYU2hd3nsFsFY7Bnot2MLGZI2udJ7iIFTx3QBS_zRFdQjJ_FLl9viOFVtjG_Rklfzqvn2675leoU7de7DBUOnUWQk8oZRUAvMmber1GzORnKeE1M37Wd5YxS20tQYrjRNr0BdaTOMEUshCyCI1EEjWrCy_zdlng2l2jZtrlYZkNsEwiGz8Cvn9UtmgVHg0UQPfzDYB8tk7Hv51rh5RR9xEllaFZMc82py7G_GjSHIRLyKJWiD_eaHbWxPEnzZszNhmqpA6Jx4Y-jVAPE-bub3LG6dd5nfzCHlbMOJTiNPHrSayPmX3QRTV14MpDcyRu8uZGhalXvx3IYcMPx_SLEXattbzdcT6OWH6nFmmrztq63pJ2IgnfDbeZ0XlarWKu0SYEMAq8fBl41tFFVYdztD6PU2qULlY3SyTQyL_FnQxw4oSgFTBXeyr80Mlj03FZf710WxYF1-JuWUQq4GlOlknuXqmVdjgCF4R__lKm0IPr0xCvTq4r5f9t7zXP3LT12QcQ5QtRXPi6By11pZMkTlKGbfzRbDuf2ksVAMhOSuPmYf3C-xZBdPGvm6r95ltSFxIdYNILrwJ2IjYs2RW3JxDWFpwK4MYpEiADzQP3SiKBgqKncfTcInoFmd5kM8mFddavDbw4uoaNLIUaSXphq_qgucHk5LQP7sHFjzfqVVWxYR_U6_NUZyvpUn-1Wv6YO9K5JzeR-lnCTxOxPIE-iA01qDhj2lZ-sJYy_zK0D19uPk9b8agtDudqWlQPebCtc6cHpfe3Wq16rlwiFheL4pVI=",
-  
+
     })
     .then(async function(instance) {
       console.log("PSPDFKit Right loaded", instance);
       rightViewer = instance;
+
+      let scrollElement = rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
+      scrollElement.addEventListener("scroll", syncViewState2);
+
+      // TODO: Needed when viewer is in single page mode
+      //instance.addEventListener("viewState.currentPageIndex.change", syncViewState2);
+      instance.addEventListener("viewState.zoom.change", syncViewState2);
 
     })
     .catch(function(error) {
@@ -65,6 +70,9 @@
     });
 
     function syncViewState() {
+
+      let scrollElementR = rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
+      scrollElementR.removeEventListener("scroll", syncViewState2);
 
       // This is the data that needs to be send over to the other
       // viewer, e.g. via WebSockets.
@@ -88,6 +96,44 @@
       let scrollElement = rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
       scrollElement.scrollLeft = customViewState.scrollLeft;
       scrollElement.scrollTop = customViewState.scrollTop;
+
+      window.setTimeout(() => {
+        scrollElementR.addEventListener("scroll", syncViewState2);
+      }, 0);
+    }
+
+    function syncViewState2() {
+
+      let scrollElementL = leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
+      scrollElementL.removeEventListener("scroll", syncViewState);
+
+      // This is the data that needs to be send over to the other
+      // viewer, e.g. via WebSockets.
+      
+      // Get the current view state from the left viewer
+      let customViewState = {
+        pageNumber: rightViewer.viewState.currentPageIndex,
+        zoomLevel: rightViewer.viewState.zoom,
+        scrollLeft: rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll").scrollLeft,
+        scrollTop: rightViewer.contentDocument.querySelector(".PSPDFKit-Scroll").scrollTop,
+      };
+    
+      // Set the page number
+      let viewState = leftViewer.viewState;
+      leftViewer.setViewState(viewState.set("currentPageIndex", customViewState.pageNumber));
+    
+      // Set the zoom level
+      leftViewer.setViewState(viewState.set("zoom", customViewState.zoomLevel));
+    
+      // Set scroll position
+      let scrollElement = leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
+      scrollElement.scrollLeft = customViewState.scrollLeft;
+      scrollElement.scrollTop = customViewState.scrollTop;
+
+      window.setTimeout(() => {
+        scrollElementL.addEventListener("scroll", syncViewState);
+      }, 0);
+      
     }
   </script>
 
