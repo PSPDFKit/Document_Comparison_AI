@@ -30,8 +30,6 @@
 
     let leftViewer, rightViewer;
 
-    // Include fast-diff library
-
     async function compareText(instance1, instance2) {
       const pageCount = await instance1.totalPageCount;
   
@@ -41,68 +39,49 @@
               instance2.textLinesForPageIndex(pageIndex),
           ]);
   
-          const lineContents1 = textLines1.toArray().map(line => line.contents).join('\n');
-          const lineContents2 = textLines2.toArray().map(line => line.contents).join('\n');
+          const minLineCount = Math.min(textLines1.size, textLines2.size);
+          for (let i = 0; i < minLineCount; i++) {
+              const line1 = textLines1.get(i).contents;
+              const line2 = textLines2.get(i).contents;
+              const lineDiffs = Diff.diffWords(line1, line2);
   
-          // Execute diff algorithm on the strings
-          const diffs = Diff.diffChars(lineContents1, lineContents2);
-  
-          let index1 = 0, index2 = 0;
-  
-          diffs.forEach(part => {
-              const lines = part.value.split('\n');
-              lines.pop(); // Remove the last element which is an empty string resulted from splitting
-  
-              lines.forEach((line, i) => {
-                if (part.added || part.removed) {
-                  const words = Diff.diffWords(lineContents1, lineContents2);
-                  words.forEach((word) => {
-                      if (word.added) {
-                        console.log(`Insertion: "${word.value}"`);
-                        console.log(textLines2.get(index2).boundingBox);
-                          //const quads = textLines2.get(index2).quads;
-                          const boundingBox = textLines2.get(index2).boundingBox
-              
-                         
-                          const highlightAnnotationRight = new PSPDFKit.Annotations.HighlightAnnotation({
-                              note: `Insertion: "${word.value}"`,
-                              boundingBox: boundingBox,
-                              pageIndex: pageIndex,
-                              rects: PSPDFKit.Immutable.List.of(boundingBox),
-                              color: PSPDFKit.Color.GREEN,
-                              opacity: 0.5,
-                          });
-              
-                          instance2.create(highlightAnnotationRight);
-                          index2++;
-                      }
-                      if (word.removed) {
-                        console.log(`Deletion: "${word.value}"`);
-                          //const quads = textLines1.get(index1).quads;
-                          const boundingBox = textLines1.get(index1).boundingBox
-              
-                          const highlightAnnotationLeft = new PSPDFKit.Annotations.HighlightAnnotation({
-                              note: `Deletion: "${word.value}"`,
-                              boundingBox: boundingBox,
-                              pageIndex: pageIndex,
-                              rects: PSPDFKit.Immutable.List.of(boundingBox),
-                              color: PSPDFKit.Color.RED,
-                              opacity: 0.5,
-                          });
-              
-                          instance1.create(highlightAnnotationLeft);
-                          index1++;
-                      }
-                  });
-              }
-              
+              let addedWords = [], removedWords = [];
+              lineDiffs.forEach(part => {
+                  if (part.added) addedWords.push(part.value);
+                  if (part.removed) removedWords.push(part.value);
               });
-          });
+  
+              if (addedWords.length > 0) {
+                  const boundingBox = textLines2.get(i).boundingBox;
+                  const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+                      note: `Insertion: "${addedWords.join(' ')}"`,
+                      boundingBox: boundingBox,
+                      pageIndex: pageIndex,
+                      rects: PSPDFKit.Immutable.List.of(boundingBox),
+                      color: PSPDFKit.Color.GREEN,
+                      opacity: 0.5,
+                  });
+  
+                  instance2.create(highlightAnnotation);
+              }
+  
+              if (removedWords.length > 0) {
+                  const boundingBox = textLines1.get(i).boundingBox;
+                  const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+                      note: `Deletion: "${removedWords.join(' ')}"`,
+                      boundingBox: boundingBox,
+                      pageIndex: pageIndex,
+                      rects: PSPDFKit.Immutable.List.of(boundingBox),
+                      color: PSPDFKit.Color.RED,
+                      opacity: 0.5,
+                  });
+  
+                  instance1.create(highlightAnnotation);
+              }
+          }
       }
   }
   
-    
-    
     function getDifference(str1, str2) {
       let i = 0;
       while(i < str1.length && i < str2.length && str1[i] === str2[i]) {
