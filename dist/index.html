@@ -37,23 +37,21 @@
       ]);
     
       let index1 = 0, index2 = 0;
+      let lineShift = 0;
     
       while(index1 < textLines1.size && index2 < textLines2.size) {
         const line1 = textLines1.get(index1);
         const line2 = textLines2.get(index2);
     
-        // First, check if the lines are exactly the same
         if(line1.contents === line2.contents) {
           index1++;
           index2++;
           continue;
         }
     
-        // If they're not the same, check if the line exists somewhere else in the other document
         const line1InText2 = textLines2.find(line => line.contents === line1.contents);
         const line2InText1 = textLines1.find(line => line.contents === line2.contents);
     
-        // If line1 exists in text2 but line2 does not exist in text1, line2 is an added line
         if(line1InText2 && !line2InText1) {
           const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
             note: `Line added: "${line2.contents}"`,
@@ -65,20 +63,27 @@
           });
     
           instance2.create(highlightAnnotation);
+          lineShift += line2.boundingBox.height;
     
           index2++;
           continue;
         }
     
-        // If line2 exists in text1 but line1 does not exist in text2, line1 is a removed line
         if(line2InText1 && !line1InText2) {
+          const newBoundingBox = new PSPDFKit.Geometry.Rect({
+            top: line1.boundingBox.top, //- lineShift,
+            left: line1.boundingBox.left,
+            width: line1.boundingBox.width,
+            height: line1.boundingBox.height
+          });
+    
           const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
             note: `Line removed: "${line1.contents}"`,
-            boundingBox: line1.boundingBox,
+            boundingBox: newBoundingBox,
             pageIndex,
             color: PSPDFKit.Color.RED,
             opacity: 0.5,
-            rects: PSPDFKit.Immutable.List.of(line1.boundingBox),
+            rects: PSPDFKit.Immutable.List.of(newBoundingBox),
           });
     
           instance1.create(highlightAnnotation);
@@ -87,26 +92,35 @@
           continue;
         }
     
-        // If both lines exist in the other document, they have been moved
         if(line1InText2 && line2InText1) {
           index1++;
           index2++;
           continue;
         }
     
-        // If none of the conditions above are met, the lines are different versions of each other
         const wordDiffs = Diff.diffWords(line1.contents, line2.contents);
         wordDiffs.forEach(wordDiff => {
           if (wordDiff.added || wordDiff.removed) {
             const note = wordDiff.added ? `Added: "${wordDiff.value}"` : `Deleted: "${wordDiff.value}"`;
     
+            const newBoundingBox = wordDiff.removed
+              ? new PSPDFKit.Geometry.Rect({
+                top: line1.boundingBox.top, //- lineShift,
+                left: line1.boundingBox.left,
+                width: line1.boundingBox.width,
+                height: line1.boundingBox.height
+                })
+              : line2.boundingBox;
+    
+                console.log(newBoundingBox);
+
             const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
               note,
-              boundingBox: line2.boundingBox,
+              boundingBox: newBoundingBox,
               pageIndex,
               color: wordDiff.added ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
               opacity: 0.5,
-              rects: PSPDFKit.Immutable.List.of(line2.boundingBox),
+              rects: PSPDFKit.Immutable.List.of(newBoundingBox),
             });
     
             (wordDiff.added ? instance2 : instance1).create(highlightAnnotation);
@@ -117,17 +131,21 @@
         index2++;
       }
     
-      // After the while loop, if there are lines remaining in either document, they are all added/removed lines
       while(index1 < textLines1.size) {
         const line1 = textLines1.get(index1);
     
+        const newBoundingBox = new PSPDFKit.Geometry.Rect({
+          ...line1.boundingBox,
+          top: line1.boundingBox.top - lineShift,
+        });
+    
         const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
           note: `Line removed: "${line1.contents}"`,
-          boundingBox: line1.boundingBox,
+          boundingBox: newBoundingBox,
           pageIndex,
           color: PSPDFKit.Color.RED,
           opacity: 0.5,
-          rects: PSPDFKit.Immutable.List.of(line1.boundingBox),
+          rects: PSPDFKit.Immutable.List.of(newBoundingBox),
         });
     
         instance1.create(highlightAnnotation);
