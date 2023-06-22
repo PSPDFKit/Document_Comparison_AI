@@ -1,4 +1,4 @@
-// npm run dev 
+// npm run dev
 // or npm run build
 // npm start <-
 
@@ -20,3 +20,6 @@ window.scheduler = scheduler;
 window.worker1 = worker1;
 window.worker2 = worker2;*/
 //console.log(window.pixelmatch);
+
+const fastDiff = require("fast-diff");
+window.fastDiff = fastDiff;

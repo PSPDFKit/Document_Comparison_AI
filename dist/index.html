@@ -16,6 +16,8 @@
 </style>
 <body>
   <div id="root"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.1.0/diff.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
 
   <script src="./assets/pspdfkit.js"></script>
   <div id="viewer-container">
@@ -28,75 +30,78 @@
 
     let leftViewer, rightViewer;
 
+    // Include fast-diff library
+
     async function compareText(instance1, instance2) {
       const pageCount = await instance1.totalPageCount;
-    
+  
       for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-        const [textLines1, textLines2] = await Promise.all([
-          instance1.textLinesForPageIndex(pageIndex),
-          instance2.textLinesForPageIndex(pageIndex),
-        ]);
-    
-        textLines1.forEach((textLine1, lineIndex) => {
-          const textLine2 = textLines2.get(lineIndex);
-    
-          if (textLine1.contents !== textLine2.contents) {
-            console.log(`Different line on page ${pageIndex + 1}, line ${lineIndex + 1}`);
-            console.log(`Left viewer: "${textLine1.contents}"`);
-            console.log(`Right viewer: "${textLine2.contents}"`);
-            console.log(textLine2);
-    
-            // Compute the differences
-            const difference1 = getDifference(textLine1.contents, textLine2.contents);
-            const difference2 = getDifference(textLine2.contents, textLine1.contents);
-    
-            // Create highlight annotations
-            const highlightAnnotationLeft = new PSPDFKit.Annotations.HighlightAnnotation({
-              note: "Old Text: " + difference1,
-              boundingBox: textLine1.boundingBox,
-              pageIndex: pageIndex,
-              rects: PSPDFKit.Immutable.List.of(textLine1.boundingBox),
-              color: PSPDFKit.Color.RED,
-              opacity: 0.5,
-            });
-    
-            const highlightAnnotationRight = new PSPDFKit.Annotations.HighlightAnnotation({
-              note: "New Text: " + difference2,
-              boundingBox: textLine2.boundingBox,
-              pageIndex: pageIndex,
-              rects: PSPDFKit.Immutable.List.of(textLine2.boundingBox),
-              color: PSPDFKit.Color.GREEN,
-              opacity: 0.5,
-            });
-    
-            instance1.create(highlightAnnotationLeft);
-            instance2.create(highlightAnnotationRight);
-    
-            /*console.log(difference1);
-
-            // Create note annotations
-            const noteAnnotationLeft = new PSPDFKit.Annotations.NoteAnnotation({
-              text: { format: "text", value: "test1" },
-              boundingBox: textLine1.boundingBox,
-              pageIndex: pageIndex,
-              //color: PSPDFKit.Color.BLUE,
-            });
-    
-
-            
-            const noteAnnotationRight = new PSPDFKit.Annotations.NoteAnnotation({
-              text: { format: "text", value: "test2" },
-              boundingBox: textLine2.boundingBox,
-              pageIndex: pageIndex,
-              //color: PSPDFKit.Color.BLUE,
-            });
-    
-            instance1.create(noteAnnotationLeft);
-            instance2.create(noteAnnotationRight);*/
-          }
-        });
+          const [textLines1, textLines2] = await Promise.all([
+              instance1.textLinesForPageIndex(pageIndex),
+              instance2.textLinesForPageIndex(pageIndex),
+          ]);
+  
+          const lineContents1 = textLines1.toArray().map(line => line.contents).join('\n');
+          const lineContents2 = textLines2.toArray().map(line => line.contents).join('\n');
+  
+          // Execute diff algorithm on the strings
+          const diffs = Diff.diffChars(lineContents1, lineContents2);
+  
+          let index1 = 0, index2 = 0;
+  
+          diffs.forEach(part => {
+              const lines = part.value.split('\n');
+              lines.pop(); // Remove the last element which is an empty string resulted from splitting
+  
+              lines.forEach((line, i) => {
+                if (part.added || part.removed) {
+                  const words = Diff.diffWords(lineContents1, lineContents2);
+                  words.forEach((word) => {
+                      if (word.added) {
+                        console.log(`Insertion: "${word.value}"`);
+                        console.log(textLines2.get(index2).boundingBox);
+                          //const quads = textLines2.get(index2).quads;
+                          const boundingBox = textLines2.get(index2).boundingBox
+              
+                         
+                          const highlightAnnotationRight = new PSPDFKit.Annotations.HighlightAnnotation({
+                              note: `Insertion: "${word.value}"`,
+                              boundingBox: boundingBox,
+                              pageIndex: pageIndex,
+                              rects: PSPDFKit.Immutable.List.of(boundingBox),
+                              color: PSPDFKit.Color.GREEN,
+                              opacity: 0.5,
+                          });
+              
+                          instance2.create(highlightAnnotationRight);
+                          index2++;
+                      }
+                      if (word.removed) {
+                        console.log(`Deletion: "${word.value}"`);
+                          //const quads = textLines1.get(index1).quads;
+                          const boundingBox = textLines1.get(index1).boundingBox
+              
+                          const highlightAnnotationLeft = new PSPDFKit.Annotations.HighlightAnnotation({
+                              note: `Deletion: "${word.value}"`,
+                              boundingBox: boundingBox,
+                              pageIndex: pageIndex,
+                              rects: PSPDFKit.Immutable.List.of(boundingBox),
+                              color: PSPDFKit.Color.RED,
+                              opacity: 0.5,
+                          });
+              
+                          instance1.create(highlightAnnotationLeft);
+                          index1++;
+                      }
+                  });
+              }
+              
+              });
+          });
       }
-    }
+  }
+  
+    
     
     function getDifference(str1, str2) {
       let i = 0;
