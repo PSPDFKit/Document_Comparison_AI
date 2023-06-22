@@ -30,58 +30,130 @@
 
     let leftViewer, rightViewer;
 
-    async function compareText(instance1, instance2) {
-      const pageCount = await instance1.totalPageCount;
-  
-      for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-          const [textLines1, textLines2] = await Promise.all([
-              instance1.textLinesForPageIndex(pageIndex),
-              instance2.textLinesForPageIndex(pageIndex),
-          ]);
-  
-          const minLineCount = Math.min(textLines1.size, textLines2.size);
-          for (let i = 0; i < minLineCount; i++) {
-              const line1 = textLines1.get(i).contents;
-              const line2 = textLines2.get(i).contents;
-              const lineDiffs = Diff.diffWords(line1, line2);
-  
-              let addedWords = [], removedWords = [];
-              lineDiffs.forEach(part => {
-                  if (part.added) addedWords.push(part.value);
-                  if (part.removed) removedWords.push(part.value);
-              });
-  
-              if (addedWords.length > 0) {
-                  const boundingBox = textLines2.get(i).boundingBox;
-                  const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-                      note: `Insertion: "${addedWords.join(' ')}"`,
-                      boundingBox: boundingBox,
-                      pageIndex: pageIndex,
-                      rects: PSPDFKit.Immutable.List.of(boundingBox),
-                      color: PSPDFKit.Color.GREEN,
-                      opacity: 0.5,
-                  });
-  
-                  instance2.create(highlightAnnotation);
-              }
-  
-              if (removedWords.length > 0) {
-                  const boundingBox = textLines1.get(i).boundingBox;
-                  const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-                      note: `Deletion: "${removedWords.join(' ')}"`,
-                      boundingBox: boundingBox,
-                      pageIndex: pageIndex,
-                      rects: PSPDFKit.Immutable.List.of(boundingBox),
-                      color: PSPDFKit.Color.RED,
-                      opacity: 0.5,
-                  });
-  
-                  instance1.create(highlightAnnotation);
-              }
+    async function compareText(instance1, instance2, pageIndex) {
+      const [textLines1, textLines2] = await Promise.all([
+        instance1.textLinesForPageIndex(pageIndex),
+        instance2.textLinesForPageIndex(pageIndex),
+      ]);
+    
+      let index1 = 0, index2 = 0;
+    
+      while(index1 < textLines1.size && index2 < textLines2.size) {
+        const line1 = textLines1.get(index1);
+        const line2 = textLines2.get(index2);
+    
+        // First, check if the lines are exactly the same
+        if(line1.contents === line2.contents) {
+          index1++;
+          index2++;
+          continue;
+        }
+    
+        // If they're not the same, check if the line exists somewhere else in the other document
+        const line1InText2 = textLines2.find(line => line.contents === line1.contents);
+        const line2InText1 = textLines1.find(line => line.contents === line2.contents);
+    
+        // If line1 exists in text2 but line2 does not exist in text1, line2 is an added line
+        if(line1InText2 && !line2InText1) {
+          const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+            note: `Line added: "${line2.contents}"`,
+            boundingBox: line2.boundingBox,
+            pageIndex,
+            color: PSPDFKit.Color.GREEN,
+            opacity: 0.5,
+            rects: PSPDFKit.Immutable.List.of(line2.boundingBox),
+          });
+    
+          instance2.create(highlightAnnotation);
+    
+          index2++;
+          continue;
+        }
+    
+        // If line2 exists in text1 but line1 does not exist in text2, line1 is a removed line
+        if(line2InText1 && !line1InText2) {
+          const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+            note: `Line removed: "${line1.contents}"`,
+            boundingBox: line1.boundingBox,
+            pageIndex,
+            color: PSPDFKit.Color.RED,
+            opacity: 0.5,
+            rects: PSPDFKit.Immutable.List.of(line1.boundingBox),
+          });
+    
+          instance1.create(highlightAnnotation);
+    
+          index1++;
+          continue;
+        }
+    
+        // If both lines exist in the other document, they have been moved
+        if(line1InText2 && line2InText1) {
+          index1++;
+          index2++;
+          continue;
+        }
+    
+        // If none of the conditions above are met, the lines are different versions of each other
+        const wordDiffs = Diff.diffWords(line1.contents, line2.contents);
+        wordDiffs.forEach(wordDiff => {
+          if (wordDiff.added || wordDiff.removed) {
+            const note = wordDiff.added ? `Added: "${wordDiff.value}"` : `Deleted: "${wordDiff.value}"`;
+    
+            const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+              note,
+              boundingBox: line2.boundingBox,
+              pageIndex,
+              color: wordDiff.added ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
+              opacity: 0.5,
+              rects: PSPDFKit.Immutable.List.of(line2.boundingBox),
+            });
+    
+            (wordDiff.added ? instance2 : instance1).create(highlightAnnotation);
           }
+        });
+    
+        index1++;
+        index2++;
       }
-  }
-  
+    
+      // After the while loop, if there are lines remaining in either document, they are all added/removed lines
+      while(index1 < textLines1.size) {
+        const line1 = textLines1.get(index1);
+    
+        const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+          note: `Line removed: "${line1.contents}"`,
+          boundingBox: line1.boundingBox,
+          pageIndex,
+          color: PSPDFKit.Color.RED,
+          opacity: 0.5,
+          rects: PSPDFKit.Immutable.List.of(line1.boundingBox),
+        });
+    
+        instance1.create(highlightAnnotation);
+    
+        index1++;
+      }
+    
+      while(index2 < textLines2.size) {
+        const line2 = textLines2.get(index2);
+    
+        const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+          note: `Line added: "${line2.contents}"`,
+          boundingBox: line2.boundingBox,
+          pageIndex,
+          color: PSPDFKit.Color.GREEN,
+          opacity: 0.5,
+          rects: PSPDFKit.Immutable.List.of(line2.boundingBox),
+        });
+    
+        instance2.create(highlightAnnotation);
+    
+        index2++;
+      }
+    }
+    
+
     function getDifference(str1, str2) {
       let i = 0;
       while(i < str1.length && i < str2.length && str1[i] === str2[i]) {
@@ -112,7 +184,7 @@
 
       window.setTimeout(() => {
         if (leftViewer && rightViewer) {
-          compareText(leftViewer, rightViewer);
+          compareText(leftViewer, rightViewer, 0);
         }
       }, 500);
 
