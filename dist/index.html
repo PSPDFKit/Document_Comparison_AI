@@ -150,7 +150,82 @@
     defaultItemsLeft.push(uploadLeft);
     defaultItemsRight.push(uploadRight);
 
+    function getFormattedGlyps(glyphs){
+
+      function truncateNumbers(obj) {
+        if (typeof obj === "number") {
+          return parseFloat(obj.toFixed(1));
+        } else if (typeof obj === "object" && obj !== null) {
+          if (Array.isArray(obj)) {
+            return obj.map(item => truncateNumbers(item));
+          } else {
+            const newObj = {};
+            for (const key in obj) {
+              newObj[key] = truncateNumbers(obj[key]);
+            }
+            return newObj;
+          }
+        }
+        return obj;
+      }
+    
+      // Assuming you have the flattened array
+      const flattenedArray = glyphs.toArray();
+    
+      // Truncate numbers to two decimal points
+      const truncatedArray = truncateNumbers(flattenedArray);
+    
+      // Convert the truncated array to a JSON string
+      const jsonString = JSON.stringify(truncatedArray);
+    
+      // Log or use the JSON string as needed
+      //console.log(jsonString);
+    
+      const optimizedJson = truncatedArray.map(item => {
+        const { c, rect } = item;
+        return { c, rect };
+      });
+    
+      //console.log(JSON.stringify(optimizedJson, null, 2));
+    
+      // Create the formatted string
+      let result = '';
+      for (const item of optimizedJson) {
+        const char = item.c;
+        const left = truncateNumbers(item.rect.toJS().left);
+        const top = truncateNumbers(item.rect.toJS().top);
+    
+        //result += `${char},${left},${top};`;
+        // Check for newline or carriage return and replace with their names
+        if (char === '\n') {
+          result += `\n,${left},${top};`;
+        } else if (char === '\r') {
+          result += `\r,${left},${top};`;
+        } else {
+          result += `${char},${left},${top};`;
+        }
+      }
+    
+      // Remove the trailing semicolon
+      result = result.slice(0, -1);
+      return result;
+    }
+
+    async function compareTextAI(instance1, instance2) {
+    
+      // Get glyphs for each instance with their position in CSV format
+      let glyphs1 = await instance1.getPageGlyphs(0);
+      let glyphFormatted1 = getFormattedGlyps(glyphs1);
+
+      let glyphs2 = await instance2.getPageGlyphs(0);
+      let glyphFormatted2 = getFormattedGlyps(glyphs2);
+
+      console.log("Instance 1: " + glyphFormatted1);
+      console.log("Instance 2: " + glyphFormatted2);
+    }
+
     async function compareText(instance1, instance2) {
+
 
       const totalPageCountLeft = instance1.totalPageCount;
       const totalPageCountRight = instance2.totalPageCount;
@@ -319,6 +394,7 @@
       window.setTimeout(() => {
         if (leftViewer && rightViewer) {
           compareText(leftViewer, rightViewer);
+          compareTextAI(leftViewer, rightViewer);
         }
       }, 250);
 
