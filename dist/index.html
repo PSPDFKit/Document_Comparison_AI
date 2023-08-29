@@ -154,7 +154,7 @@
 
       function truncateNumbers(obj) {
         if (typeof obj === "number") {
-          return parseFloat(obj.toFixed(1));
+          return parseFloat(obj.toFixed(0));
         } else if (typeof obj === "object" && obj !== null) {
           if (Array.isArray(obj)) {
             return obj.map(item => truncateNumbers(item));
@@ -194,15 +194,17 @@
         const char = item.c;
         const left = truncateNumbers(item.rect.toJS().left);
         const top = truncateNumbers(item.rect.toJS().top);
+        const width = truncateNumbers(item.rect.toJS().width);
+        const height = truncateNumbers(item.rect.toJS().height);
     
         //result += `${char},${left},${top};`;
         // Check for newline or carriage return and replace with their names
         if (char === '\n') {
-          result += `\n,${left},${top};`;
+          result += `\n,${left},${top},${width},${height};`;
         } else if (char === '\r') {
-          result += `\r,${left},${top};`;
+          result += `\r,${left},${top},${width},${height};`;
         } else {
-          result += `${char},${left},${top};`;
+          result += `${char},${left},${top},${width},${height};`;
         }
       }
     
@@ -221,7 +223,7 @@
       let glyphFormatted2 = getFormattedGlyps(glyphs2);
 
       console.log("Instance 1: " + glyphFormatted1);
-      console.log("Instance 2: " + glyphFormatted2);
+     //console.log("Instance 2: " + glyphFormatted2);
 
             // The variable 'userContent' should contain the message from the user
       let userContent = `P,73.7,78.6;D,84,78.6;F,96.3,78.6;s,104.6,81.8;,,112.1,89; ,116.7,71.3;d,122.1,77.7;i,133,78.3;g,136.8,81.8;i,147,78.3;t,150.6,79.6;a,157.9,81.8;l,168.1,77.7; ,171.2,71.3;d,176.6,77.7;o,187.1,81.8;c,197.6,81.8;s,206,81.8; ,213,71.3;s,218.3,81.8;o,226.2,81.8; ,235.9,71.3;f,240.8,77.6;i,247.8,78.3;n,252.6,81.8;e,262.5,81.8;,,272,89;
@@ -250,7 +252,7 @@
         ,344.3,359.8;
         ,344.3,359.8;F,73.7,371.4;o,82.1,374.6;r,93.2,374.6;e,99.6,374.6;v,109,374.7;e,118.6,374.6;r,129.1,374.6; ,134.6,364.1;c,140,374.6h,149.1,370.5;a,159,374.6;n,169.2,374.6;g,178.7,374.6;i,188.9,371.1;n,193.7,374.6;g,203.2,374.6; ,212.1,364.1;t,216.9,372.4;h,224.8,370.5;e,234.7,374.6; ,243.8,364.1;w,248.8,374.7;a,263.5,374.6;y,272.5,374.7; ,281.2,364.1;w,286.3,374.7;e,300.9,374.6; ,310,364.1;t,314.8,372.4;h,322.7,370.5;i,333,371.1;n,337.8,374.6;k,348.3,370.5;.,357.4,381.8`;
 
-      fetch('https://api.openai.com/v1/chat/completions', {
+      /*fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -272,7 +274,29 @@
       })
       .then(response => response.json())
       .then(data => console.log(data))
-      .catch((error) => console.error('Error:', error));
+      .catch((error) => console.error('Error:', error));*/
+      
+      let annotation = new PSPDFKit.Annotations.HighlightAnnotation({
+        pageIndex: 0,  
+        color : new PSPDFKit.Color({ r: 0, g: 255, b: 255 }),
+        boundingBox: new PSPDFKit.Geometry.Rect({
+          left: 82, 
+          bottom: 92, 
+          right: 101, 
+          top: 79,
+        width: 17,
+      height: 13 }),
+        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
+          left: 82, 
+          bottom: 92, 
+          right: 101, 
+          top: 79,
+        width: 17,
+      height: 13 })])
+      });
+      instance1.create(annotation);
+      console.log("annot created");
+
 
     }
 
@@ -316,6 +340,8 @@
               rects: PSPDFKit.Immutable.List.of(line2.boundingBox),
             });
       
+            console.log("line");
+            console.log(highlightAnnotation);
             instance2.create(highlightAnnotation);
             lineShift += line2.boundingBox.height;
       
