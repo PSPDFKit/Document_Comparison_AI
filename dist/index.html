@@ -204,7 +204,8 @@
         } else if (char === '\r') {
           result += `\r,${left},${top},${width},${height};`;
         } else {
-          result += `${char},${left},${top},${width},${height};`;
+          //result += `${char},${left},${top},${width},${height};`;
+           result += `${char},${width};`;
         }
       }
     
@@ -214,16 +215,92 @@
     }
 
     async function compareTextAI(instance1, instance2) {
+
+      //new { left: 84.21, bottom: 103.28, right: 114.21, top: 77.28, width: 30, height: 26 }
+      /*let annotation1 = new PSPDFKit.Annotations.HighlightAnnotation({
+        pageIndex: 0,  
+        color : new PSPDFKit.Color({ r: 255, g: 0, b: 0 }),
+        boundingBox: new PSPDFKit.Geometry.Rect({
+          left:  84.21, 
+          bottom: 103.28, 
+          right: 114.21, 
+          top: 77.28,
+        width: 30,
+      height: 26 }),
+        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
+          left: 84.21, 
+          bottom: 103.28, 
+          right: 114.21, 
+          top: 77.28,
+          width: 30,
+          height: 26 }),
+      
+      ])
+      });
+      await instance1.create(annotation1);
+
+      // new: { left: 109.21, bottom: 103.28, right: 123.21, top: 77.28, width: 14, height: 26 }
+      let annotation2 = new PSPDFKit.Annotations.HighlightAnnotation({
+        pageIndex: 0,  
+        color : new PSPDFKit.Color({ r: 255, g: 0, b: 0 }),
+        boundingBox: new PSPDFKit.Geometry.Rect({
+          left: 109.21,
+          bottom: 103.28, 
+          right:  123.21, 
+          top: 77.28,
+          width: 14,
+      height: 26 }),
+        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
+          left: 109.21, 
+          bottom: 103.28, 
+          right:  123.21, 
+          top: 77.28,
+        width: 14,
+      height: 26 }),
+      
+      ])
+      });
+      await instance1.create(annotation2);
+
+      //{left: 298.73, bottom: 103.28, right: 335.68, top: 77.28, width: 36.95, height: 26 }
+      let annotation3 = new PSPDFKit.Annotations.HighlightAnnotation({
+        pageIndex: 0,  
+        color : new PSPDFKit.Color({ r: 255, g: 0, b: 0 }),
+        boundingBox: new PSPDFKit.Geometry.Rect({
+          left: 298.73,
+          bottom: 103.28, 
+          right:  335.68, 
+          top: 77.28,
+          width: 36.95,
+      height: 26 }),
+        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
+          left: 298.73, 
+          bottom: 103.28, 
+          right:  335.68, 
+          top: 77.28,
+        width: 36.95,
+      height: 26 }),
+      
+      ])
+      });
+      await instance1.create(annotation3);*/
+
     
       // Get glyphs for each instance with their position in CSV format
       let glyphs1 = await instance1.getPageGlyphs(0);
       let glyphFormatted1 = getFormattedGlyps(glyphs1);
+      let linesInstance1 = await instance1.textLinesForPageIndex(0);
+      console.log("lines 1");
+      console.log(linesInstance1);
+      let linesInstance2 = await instance2.textLinesForPageIndex(0);
+      console.log("lines 2");
+      console.log(linesInstance2);
 
       let glyphs2 = await instance2.getPageGlyphs(0);
       let glyphFormatted2 = getFormattedGlyps(glyphs2);
 
-     // console.log("Instance 1: " + glyphFormatted1);
-     //console.log("Instance 2: " + glyphFormatted2);
+      console.log("Instance 1: " + glyphFormatted1);
+     console.log("Instance 2: " + glyphFormatted2);
 
      const instructions = "your job is to parse two CSVs and compare them, they have the following format: <character>,<top position>,<left position>,<width>,<height> put the words and sentences based on the character together, the characters are in reading order. for example this P,74,79,8,13;D,84,79,10,13;F,96,79,7,13;s,105,82,6,10; translates to 'PDFs' after parsing both CSVs, compare the text of both CSVs and tell me if there are differences. your output should be in teh format of pspdfkit web highlight annotations. i want to create as few highlight annotations as possible to show all changes in the document. remember that th format for pspdfkit highlight annotations is as follows: {pageIndex: 0,rects: boundingBoxes,boundingBox: PSPDFKit.Geometry.Rect.union(boundingBoxes)} please group highlight annotations for neighbouring changed characters together into one as long as they are in the same word, don't list them as seperate rects in an array, but actually calculate one new rect. here is an example annotation  { pageIndex: 0, color : new PSPDFKit.Color({ r: 0, g: 255, b: 255 }), boundingBox: new PSPDFKit.Geometry.Rect({ left: 82, bottom: 92, right: 101, top: 79, width: 17, height: 13 }), rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({ left: 82, bottom: 92, right: 101, top: 79, width: 17, height: 13 })]) }); your output should be strictly a json object with array element for each highlight annotation containing only the left, bottom, right, top, width and height property for each annotation only, without new lines \n or any other text, for example: { 'left': 74, 'bottom': 92, 'right': 112, 'top': 79, 'width': 38, 'height': 13 } start the annotation json with this keyword: 'annot:'" ;
      const userContent = "CSV1: P,74,79,8,13;D,84,79,10,13;F,96,79,7,13;s,105,82,6,10;,,112,89,3,5; ,117,71,5,20;d,122,78,8,14;i,133,78,2,13;t,137,82,8,13;i,147,78,2,13;t,151,80,6,12;a,158,82,7,10;l,168,78,2,14; ,171,71,5,20;d,177,78,8,14;o,187,82,9,10;c,198,82,7,10;s,206,82,6,10; ,213,71,5,20;s,218,82,6,10;o,226,82,9,10; ,236,71,5,20;f,241,78,6,14;i,248,78,2,13;n,253,82,8,9;e,263,82,8,10;,,272,89,3,5;,275,91,0,0;CSV2: P,74,79,8,13;B,84,79,10,13;A,96,79,7,13;s,105,82,6,10;,,112,89,3,5; ,117,71,5,20;d,122,78,8,14;x,133,78,2,13;g,137,82,8,13;i,147,78,2,13;t,151,80,6,12;a,158,82,7,10;l,168,78,2,14; ,171,71,5,20;d,177,78,8,14;o,187,82,9,10;c,198,82,7,10;s,206,82,6,10; ,213,71,5,20;s,218,82,6,10;o,226,82,9,10; ,236,71,5,20;f,241,78,6,14;i,248,78,2,13;n,253,82,8,9;e,263,82,8,10;,,272,89,3,5;,275,91,0,0;";
@@ -333,30 +410,37 @@
       })
       .then(data => console.log(data))
       .catch((error) => console.error('Error:', error));
+
+      //{left: 83.52, bottom: 103.28, right: 111.46, top: 77.28, width: 27.94, height: 26 }
+      //{left: 167.43, bottom: 103.28, right: 186.06, top: 77.28, width: 18.63, height: 26 }
       
-      /*let annotation = new PSPDFKit.Annotations.HighlightAnnotation({
-        pageIndex: 0,  
-        color : new PSPDFKit.Color({ r: 0, g: 255, b: 255 }),
-        boundingBox: new PSPDFKit.Geometry.Rect({
-          left: 82, 
-          bottom: 92, 
-          right: 101, 
-          top: 79,
-        width: 17,
-      height: 13 }),
-        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
-          left: 82, 
-          bottom: 92, 
-          right: 101, 
-          top: 79,
-        width: 17,
-      height: 13 })])
-      });*/
-      //instance1.create(annotation);
+
       //console.log("annot created");
 
 
     }
+
+    async function compareTextAI2(instance1, instance2) {
+      const totalPageCountLeft = instance1.totalPageCount;
+      const totalPageCountRight = instance2.totalPageCount;
+
+      const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
+
+      for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
+        const [textLines1, textLines2] = await Promise.all([
+          instance1.textLinesForPageIndex(pageIndex),
+          instance2.textLinesForPageIndex(pageIndex),
+        ]);
+        const jsObj1 = textLines1.toJS();
+        const jsonString1 = JSON.stringify(jsObj1);
+        console.log(jsonString1);
+
+        const jsObj2 = textLines2.toJS();
+        const jsonString2 = JSON.stringify(jsObj2);
+        console.log(jsonString2);
+      }
+    }
+
 
     async function compareText(instance1, instance2) {
 
@@ -511,7 +595,7 @@
 
     PSPDFKit.load({
       container: "#pspdfkitLeft",
-      document: "PDF-single-line-v1.pdf",
+      document: "PDF poem v1.pdf",
       toolbarItems: defaultItemsLeft,
       licenseKey: licenseKey
     })
@@ -530,7 +614,8 @@
       window.setTimeout(() => {
         if (leftViewer && rightViewer) {
           //compareText(leftViewer, rightViewer);
-          compareTextAI(leftViewer, rightViewer);
+          //compareTextAI(leftViewer, rightViewer);
+          compareTextAI2(leftViewer, rightViewer);
         }
       }, 250);
 
@@ -541,7 +626,7 @@
 
     PSPDFKit.load({
       container: "#pspdfkitRight",
-      document: "PDF-single-line-v2.pdf",
+      document: "PDF poem v3.pdf",
       toolbarItems: defaultItemsRight,
       licenseKey: licenseKey
 
