@@ -180,16 +180,23 @@
     
       // Log or use the JSON string as needed
       //console.log(jsonString);
-    
+  
+
       const optimizedJson = truncatedArray.map(item => {
         const { c, rect } = item;
-        return { c, rect };
+        let width = rect.get("width");
+        let height = rect.get("height");
+        let top = rect.get("top");
+        let left = rect.get("left");
+        return { c, width, height, top, left };
       });
+
+      return optimizedJson;
     
       //console.log(JSON.stringify(optimizedJson, null, 2));
     
       // Create the formatted string
-      let result = '';
+      /*let result = '';
       for (const item of optimizedJson) {
         const char = item.c;
         const left = truncateNumbers(item.rect.toJS().left);
@@ -204,14 +211,14 @@
         } else if (char === '\r') {
           result += `\r,${left},${top},${width},${height};`;
         } else {
-          //result += `${char},${left},${top},${width},${height};`;
-           result += `${char},${width};`;
+           result += `${char},${left},${top},${width},${height};`;
+           //result += `${char},${width};`;
         }
       }
     
       // Remove the trailing semicolon
       result = result.slice(0, -1);
-      return result;
+      return result;*/
     }
 
     async function compareTextAI(instance1, instance2) {
@@ -441,6 +448,156 @@
       }
     }
 
+    async function compareText2(instance1, instance2){
+     
+      const totalPageCountLeft = instance1.totalPageCount;
+      const totalPageCountRight = instance2.totalPageCount;
+
+      const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
+
+      for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
+        const [textLines1, textLines2] = await Promise.all([
+          instance1.textLinesForPageIndex(pageIndex),
+          instance2.textLinesForPageIndex(pageIndex),
+        ]);
+      
+        let index1 = 0, index2 = 0;
+        let lineShift = 0;
+
+              // Get glyphs for each instance with their position in CSV format
+      let glyphs1 = await instance1.getPageGlyphs(0);
+      let glyphFormatted1 = getFormattedGlyps(glyphs1);
+
+      let glyphs2 = await instance2.getPageGlyphs(0);
+      let glyphFormatted2 = getFormattedGlyps(glyphs2);
+
+      console.log("Instance 1: ");
+      console.log(glyphFormatted1);
+      console.log("Instance 2: ");
+      console.log(glyphFormatted2);
+
+      function textCompare(glyphs1, glyphs2) {
+        const N = glyphs1.length;
+        const M = glyphs2.length;
+        const MAX = N + M;
+        const V = new Array(2 * MAX + 1).fill(0);
+      
+        const trace = [];
+      
+        for (let D = 0; D <= MAX; D++) {
+          for (let k = -D; k <= D; k += 2) {
+            let x = (k === -D || (k !== D && V[MAX + k - 1] < V[MAX + k + 1])) ? V[MAX + k + 1] : V[MAX + k - 1] + 1;
+            let y = x - k;
+      
+            while (x < N && y < M && glyphs1[x].c === glyphs2[y].c) {
+              x++;
+              y++;
+            }
+      
+            V[MAX + k] = x;
+      
+            if (x >= N && y >= M) {
+              return buildDiff(trace, glyphs1, glyphs2);
+            }
+          }
+      
+          trace.push([...V]);
+        }
+      }
+      
+      function buildDiff(trace, glyphs1, glyphs2) {
+        const result = [];
+        let x = glyphs1.length;
+        let y = glyphs2.length;
+        const MAX = x + y;
+        let D = trace.length - 1;
+      
+        for (; D >= 0; D--) {
+          const V = trace[D];
+          const k = x - y;
+      
+          let prev_k = (k === -D || (k !== D && V[MAX + k - 1] < V[MAX + k + 1])) ? k + 1 : k - 1;
+          let prev_x = V[MAX + prev_k];
+          let prev_y = prev_x - prev_k;
+      
+          while (x > prev_x && y > prev_y) {
+            result.push({
+              action: 'EQUAL',
+              char: glyphs1[x - 1].c,
+              position1: glyphs1[x - 1],
+              position2: glyphs2[y - 1]
+            });
+            x--;
+            y--;
+          }
+      
+          if (D === 0) break;
+      
+          for (; x > prev_x; x--) {
+            result.push({
+              action: 'DELETE',
+              char: glyphs1[x - 1].c,
+              position: glyphs1[x - 1]
+            });
+          }
+      
+          for (; y > prev_y; y--) {
+            result.push({
+              action: 'INSERT',
+              char: glyphs2[y - 1].c,
+              position: glyphs2[y - 1]
+            });
+          }
+      
+          x = prev_x;
+          y = prev_y;
+        }
+      
+        return result.reverse();
+      }
+      
+      
+      const result = textCompare(glyphFormatted1, glyphFormatted2);
+      console.log("result of comparison");
+      console.log(result);
+
+
+      result.forEach(diff => {
+        if (diff.action === 'INSERT' || diff.action === 'DELETE') {
+          // If the glyph was added or removed, we need to highlight it.
+          // Here I assume that the `position` field in the diff result
+          // contains the full glyph object including `left`, `top`, `width`, `height`.
+
+          //const position = diff.action === 'DELETE' ? diff.position1 : diff.position2;
+          const position = diff.position;
+
+          const newBoundingBox = new PSPDFKit.Geometry.Rect({
+            top: position.top,
+            left: position.left,
+            width: position.width,
+            height: position.height
+          });
+
+          const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+            boundingBox: newBoundingBox,
+            pageIndex, // Assuming this is set earlier in your code
+            color: diff.action === 'INSERT' ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
+            opacity: 0.8,
+            rects: PSPDFKit.Immutable.List.of(newBoundingBox),
+          });
+
+          // Assuming instance1 and instance2 are your PSPDFKit instances for each version
+          // Create the annotation on the appropriate instance.
+          (diff.action === 'INSERT' ? instance2 : instance1).create(highlightAnnotation);
+        }
+      });
+
+      
+
+      }
+
+    }
+
 
     async function compareText(instance1, instance2) {
 
@@ -615,7 +772,8 @@
         if (leftViewer && rightViewer) {
           //compareText(leftViewer, rightViewer);
           //compareTextAI(leftViewer, rightViewer);
-          compareTextAI2(leftViewer, rightViewer);
+          //compareTextAI2(leftViewer, rightViewer);
+          compareText2(leftViewer, rightViewer);
         }
       }, 250);
 
