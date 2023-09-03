@@ -556,43 +556,75 @@
         return result.reverse();
       }
       
-      
+      async function getLineForGlyph(glyph, pageIndex, instance) {
+        const lines = await instance.textLinesForPageIndex(pageIndex);
+        return lines.find(line =>
+          glyph.top >= line.boundingBox.top &&
+          glyph.top + glyph.height <= line.boundingBox.top + line.boundingBox.height
+        );
+      }
+
       const result = textCompare(glyphFormatted1, glyphFormatted2);
       console.log("result of comparison");
       console.log(result);
 
-
-      result.forEach(diff => {
+      let lastLine = null;
+      let lastAction = null;
+      let highlightGroup = [];
+    
+      for (const diff of result) {
         if (diff.action === 'INSERT' || diff.action === 'DELETE') {
-          // If the glyph was added or removed, we need to highlight it.
-          // Here I assume that the `position` field in the diff result
-          // contains the full glyph object including `left`, `top`, `width`, `height`.
-
-          //const position = diff.action === 'DELETE' ? diff.position1 : diff.position2;
-          const position = diff.position;
-
-          const newBoundingBox = new PSPDFKit.Geometry.Rect({
-            top: position.top,
-            left: position.left,
-            width: position.width,
-            height: position.height
-          });
-
-          const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-            boundingBox: newBoundingBox,
-            pageIndex, // Assuming this is set earlier in your code
-            color: diff.action === 'INSERT' ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
-            opacity: 0.8,
-            rects: PSPDFKit.Immutable.List.of(newBoundingBox),
-          });
-
-          // Assuming instance1 and instance2 are your PSPDFKit instances for each version
-          // Create the annotation on the appropriate instance.
-          (diff.action === 'INSERT' ? instance2 : instance1).create(highlightAnnotation);
+          const glyph = diff.position;
+          const line = await getLineForGlyph(glyph, pageIndex, diff.action === 'INSERT' ? instance2 : instance1);
+          const instance = diff.action === 'INSERT' ? instance2 : instance1;
+    
+          // Check if the line is defined
+          if (line) {
+            if (lastLine && lastAction === diff.action && line.boundingBox.top === lastLine.boundingBox.top) {
+              // Extend the current highlight group
+              highlightGroup.push(glyph);
+            } else {
+              // Create a highlight annotation for the previous group
+              if (highlightGroup.length > 0 && lastLine) {
+                createHighlightAnnotation(highlightGroup, lastLine, lastAction, pageIndex, instance1, instance2);
+              }
+              // Start a new highlight group
+              highlightGroup = [glyph];
+              lastAction = diff.action;
+              lastLine = line;
+            }
+          }
         }
-      });
-
-      
+      }
+    
+      // Create a highlight annotation for the last group
+      if (highlightGroup.length > 0 && lastLine) {
+        createHighlightAnnotation(highlightGroup, lastLine, lastAction, pageIndex, instance1, instance2);
+      }
+    
+      function createHighlightAnnotation(highlightGroup, lastLine, lastAction, pageIndex, instance1, instance2) {
+        const startGlyph = highlightGroup[0];
+        const endGlyph = highlightGroup[highlightGroup.length - 1];
+    
+        const newBoundingBox = new PSPDFKit.Geometry.Rect({
+          top: lastLine.boundingBox.top,
+          left: startGlyph.left,
+          width: endGlyph.left + endGlyph.width - startGlyph.left,
+          height: lastLine.boundingBox.height,
+        });
+    
+        const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+          boundingBox: newBoundingBox,
+          pageIndex,
+          color: lastAction === 'INSERT' ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
+          opacity: 0.8,
+          rects: PSPDFKit.Immutable.List.of(newBoundingBox),
+        });
+    
+        // Add to the correct instance based on action
+        const instanceToAdd = (lastAction === 'DELETE') ? instance1 : instance2;
+        instanceToAdd.create(highlightAnnotation);
+      }
 
       }
 
