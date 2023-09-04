@@ -630,6 +630,232 @@
 
     }
 
+    async function compareText3(instance1, instance2){
+      const totalPageCountLeft = instance1.totalPageCount;
+      const totalPageCountRight = instance2.totalPageCount;
+
+      const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
+
+      function buildTextStructure(pageLines, characters) {
+        const structure = [];
+        
+        function isCharInLine(char, line) {
+            return char.top >= line.boundingBox.top && char.top <= line.boundingBox.bottom;
+        }
+    
+        function isPunctuation(c) {
+            return [',', '.', '!', '?'].includes(c);
+        }
+    
+        for (const line of pageLines) {
+            const lineStructure = {
+                lineText: '',
+                boundingBox: line.boundingBox,
+                words: []
+            };
+            
+            let currentWord = {
+                wordText: '',
+                boundingBox: null,
+                characters: []
+            };
+    
+            let lastChar = null;
+    
+            for (let i = 0; i < characters.length; i++) {
+                const char = characters[i];
+                const isLastChar = i === characters.length - 1 || !isCharInLine(characters[i + 1], line);
+    
+                if (isCharInLine(char, line)) {
+                    if (lastChar && (char.left - (lastChar.left + lastChar.width)) > 5 && !isLastChar) {
+                        lineStructure.lineText += ' ';
+    
+                        if (currentWord.wordText !== '') {
+                            lineStructure.words.push(currentWord);
+                        }
+    
+                        currentWord = {
+                            wordText: '',
+                            boundingBox: null,
+                            characters: []
+                        };
+                    }
+    
+                    lineStructure.lineText += char.c;
+                    
+                    // If the character is a punctuation, treat it as its own word
+                    if (isPunctuation(char.c)) {
+                        if (currentWord.wordText !== '') {
+                            lineStructure.words.push(currentWord);
+                        }
+                        lineStructure.words.push({
+                            wordText: char.c,
+                            boundingBox: {
+                                height: line.boundingBox.height,
+                                top: line.boundingBox.top,
+                                left: char.left,
+                                width: char.width
+                            },
+                            characters: [char]
+                        });
+                        currentWord = {
+                            wordText: '',
+                            boundingBox: null,
+                            characters: []
+                        };
+                    } else {
+                        currentWord.wordText += char.c;
+                        currentWord.characters.push(char);
+    
+                        if (currentWord.boundingBox === null) {
+                            currentWord.boundingBox = {
+                                height: line.boundingBox.height,
+                                top: line.boundingBox.top,
+                                left: char.left,
+                                width: char.width
+                            };
+                        } else {
+                            const charRight = char.left + char.width;
+                            const currentWordRight = currentWord.boundingBox.left + currentWord.boundingBox.width;
+                            if (charRight > currentWordRight) {
+                                currentWord.boundingBox.width = charRight - currentWord.boundingBox.left;
+                            }
+                        }
+                    }
+    
+                    lastChar = char;
+    
+                    if (isLastChar && currentWord.wordText !== '') {
+                        lineStructure.words.push(currentWord);
+                        currentWord = {
+                            wordText: '',
+                            boundingBox: null,
+                            characters: []
+                        };
+                    }
+                }
+            }
+    
+            if (currentWord.wordText !== '') {
+                lineStructure.words.push(currentWord);
+            }
+    
+            structure.push(lineStructure);
+        }
+        
+        return structure;
+    }
+    
+      function compareDocuments(doc1, doc2, instance1, instance2) {
+        let pageIndex = 0;
+
+        for (let lineIndex = 0; lineIndex < Math.min(doc1.length, doc2.length); lineIndex++) {
+         
+          const line1 = doc1[lineIndex];
+          const line2 = doc2[lineIndex];
+          
+          console.log(line1.lineText);
+          console.log(line2.lineText);
+
+          // First, compare lines.
+          if (line1.lineText !== line2.lineText) {
+            line1.mutated = true;
+            line2.mutated = true;
+
+            console.log("line mutated");
+      
+            const minLength = Math.min(line1.words.length, line2.words.length);
+      
+            // Then, compare words.
+            for (let wordIndex = 0; wordIndex < minLength; wordIndex++) {
+              const word1 = line1.words[wordIndex];
+              const word2 = line2.words[wordIndex];
+      
+              if (word1.wordText !== word2.wordText) {
+                let differingCharacters = [];
+                
+                for (let charIndex = 0; charIndex < Math.min(word1.characters.length, word2.characters.length); charIndex++) {
+                  if (word1.characters[charIndex].c !== word2.characters[charIndex].c) {
+                    differingCharacters.push([word1.characters[charIndex], word2.characters[charIndex]]);
+                  }
+                }
+      
+                // If 2 or fewer characters differ, highlight them; otherwise, highlight the whole word.
+                if (differingCharacters.length <= 2) {
+                  for (const [char1, char2] of differingCharacters) {
+                    createHighlightAnnotation([char1], line1, 'DELETE', pageIndex, instance1, instance2);
+                    createHighlightAnnotation([char2], line2, 'INSERT', pageIndex, instance1, instance2);
+                  }
+                } else {
+                  createHighlightAnnotation(word1.characters, line1, 'DELETE', pageIndex, instance1, instance2);
+                  createHighlightAnnotation(word2.characters, line2, 'INSERT', pageIndex, instance1, instance2);
+                }
+              }
+            }
+          }
+        }
+      }
+    
+
+      function createHighlightAnnotation(highlightGroup, lastLine, lastAction, pageIndex, instance1, instance2) {
+      const startGlyph = highlightGroup[0];
+      const endGlyph = highlightGroup[highlightGroup.length - 1];
+    
+      const newBoundingBox = new PSPDFKit.Geometry.Rect({
+        top: lastLine.boundingBox.top,
+        left: startGlyph.left,
+        width: endGlyph.left + endGlyph.width - startGlyph.left,
+        height: lastLine.boundingBox.height,
+      });
+    
+      const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+        boundingBox: newBoundingBox,
+        pageIndex,
+        color: lastAction === 'INSERT' ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
+        opacity: 0.8,
+        rects: PSPDFKit.Immutable.List.of(newBoundingBox),
+      });
+    
+      const instanceToAdd = (lastAction === 'DELETE') ? instance1 : instance2;
+      instanceToAdd.create(highlightAnnotation);
+    }
+
+      for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
+        const [textLines1, textLines2] = await Promise.all([
+          instance1.textLinesForPageIndex(pageIndex),
+          instance2.textLinesForPageIndex(pageIndex),
+        ]);
+      
+        let index1 = 0, index2 = 0;
+        let lineShift = 0;
+
+              // Get glyphs for each instance with their position in CSV format
+      let glyphs1 = await instance1.getPageGlyphs(0);
+      let glyphFormatted1 = getFormattedGlyps(glyphs1);
+
+      let glyphs2 = await instance2.getPageGlyphs(0);
+      let glyphFormatted2 = getFormattedGlyps(glyphs2);
+
+      console.log("Instance 1: ");
+      console.log(glyphFormatted1);
+      //console.log("Instance 2: ");
+      //console.log(glyphFormatted2);
+
+      console.log("text lines1");
+      console.log(textLines1.toArray());
+
+      const pageTextStructured1 = buildTextStructure(textLines1.toArray(), glyphFormatted1);
+      const pageTextStructured2 = buildTextStructure(textLines2.toArray(), glyphFormatted2);
+      console.log("pageTextStructured1");
+      console.log(pageTextStructured1);
+      console.log("pageTextStructured2");
+      console.log(pageTextStructured2);
+
+      compareDocuments(pageTextStructured1, pageTextStructured2, instance1, instance2);
+
+      }
+
+    }
 
     async function compareText(instance1, instance2) {
 
@@ -805,7 +1031,8 @@
           //compareText(leftViewer, rightViewer);
           //compareTextAI(leftViewer, rightViewer);
           //compareTextAI2(leftViewer, rightViewer);
-          compareText2(leftViewer, rightViewer);
+          //compareText2(leftViewer, rightViewer);
+          compareText3(leftViewer, rightViewer);
         }
       }, 250);
 
