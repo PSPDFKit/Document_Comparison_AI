@@ -427,210 +427,7 @@
 
     }
 
-    async function compareTextAI2(instance1, instance2) {
-      const totalPageCountLeft = instance1.totalPageCount;
-      const totalPageCountRight = instance2.totalPageCount;
-
-      const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
-
-      for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
-        const [textLines1, textLines2] = await Promise.all([
-          instance1.textLinesForPageIndex(pageIndex),
-          instance2.textLinesForPageIndex(pageIndex),
-        ]);
-        const jsObj1 = textLines1.toJS();
-        const jsonString1 = JSON.stringify(jsObj1);
-        console.log(jsonString1);
-
-        const jsObj2 = textLines2.toJS();
-        const jsonString2 = JSON.stringify(jsObj2);
-        console.log(jsonString2);
-      }
-    }
-
-    async function compareText2(instance1, instance2){
-     
-      const totalPageCountLeft = instance1.totalPageCount;
-      const totalPageCountRight = instance2.totalPageCount;
-
-      const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
-
-      for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
-        const [textLines1, textLines2] = await Promise.all([
-          instance1.textLinesForPageIndex(pageIndex),
-          instance2.textLinesForPageIndex(pageIndex),
-        ]);
-      
-        let index1 = 0, index2 = 0;
-        let lineShift = 0;
-
-              // Get glyphs for each instance with their position in CSV format
-      let glyphs1 = await instance1.getPageGlyphs(0);
-      let glyphFormatted1 = getFormattedGlyps(glyphs1);
-
-      let glyphs2 = await instance2.getPageGlyphs(0);
-      let glyphFormatted2 = getFormattedGlyps(glyphs2);
-
-      console.log("Instance 1: ");
-      console.log(glyphFormatted1);
-      console.log("Instance 2: ");
-      console.log(glyphFormatted2);
-
-      function textCompare(glyphs1, glyphs2) {
-        const N = glyphs1.length;
-        const M = glyphs2.length;
-        const MAX = N + M;
-        const V = new Array(2 * MAX + 1).fill(0);
-      
-        const trace = [];
-      
-        for (let D = 0; D <= MAX; D++) {
-          for (let k = -D; k <= D; k += 2) {
-            let x = (k === -D || (k !== D && V[MAX + k - 1] < V[MAX + k + 1])) ? V[MAX + k + 1] : V[MAX + k - 1] + 1;
-            let y = x - k;
-      
-            while (x < N && y < M && glyphs1[x].c === glyphs2[y].c) {
-              x++;
-              y++;
-            }
-      
-            V[MAX + k] = x;
-      
-            if (x >= N && y >= M) {
-              return buildDiff(trace, glyphs1, glyphs2);
-            }
-          }
-      
-          trace.push([...V]);
-        }
-      }
-      
-      function buildDiff(trace, glyphs1, glyphs2) {
-        const result = [];
-        let x = glyphs1.length;
-        let y = glyphs2.length;
-        const MAX = x + y;
-        let D = trace.length - 1;
-      
-        for (; D >= 0; D--) {
-          const V = trace[D];
-          const k = x - y;
-      
-          let prev_k = (k === -D || (k !== D && V[MAX + k - 1] < V[MAX + k + 1])) ? k + 1 : k - 1;
-          let prev_x = V[MAX + prev_k];
-          let prev_y = prev_x - prev_k;
-      
-          while (x > prev_x && y > prev_y) {
-            result.push({
-              action: 'EQUAL',
-              char: glyphs1[x - 1].c,
-              position1: glyphs1[x - 1],
-              position2: glyphs2[y - 1]
-            });
-            x--;
-            y--;
-          }
-      
-          if (D === 0) break;
-      
-          for (; x > prev_x; x--) {
-            result.push({
-              action: 'DELETE',
-              char: glyphs1[x - 1].c,
-              position: glyphs1[x - 1]
-            });
-          }
-      
-          for (; y > prev_y; y--) {
-            result.push({
-              action: 'INSERT',
-              char: glyphs2[y - 1].c,
-              position: glyphs2[y - 1]
-            });
-          }
-      
-          x = prev_x;
-          y = prev_y;
-        }
-      
-        return result.reverse();
-      }
-      
-      async function getLineForGlyph(glyph, pageIndex, instance) {
-        const lines = await instance.textLinesForPageIndex(pageIndex);
-        return lines.find(line =>
-          glyph.top >= line.boundingBox.top &&
-          glyph.top + glyph.height <= line.boundingBox.top + line.boundingBox.height
-        );
-      }
-
-      const result = textCompare(glyphFormatted1, glyphFormatted2);
-      console.log("result of comparison");
-      console.log(result);
-
-      let lastLine = null;
-      let lastAction = null;
-      let highlightGroup = [];
-    
-      for (const diff of result) {
-        if (diff.action === 'INSERT' || diff.action === 'DELETE') {
-          const glyph = diff.position;
-          const line = await getLineForGlyph(glyph, pageIndex, diff.action === 'INSERT' ? instance2 : instance1);
-          const instance = diff.action === 'INSERT' ? instance2 : instance1;
-    
-          // Check if the line is defined
-          if (line) {
-            if (lastLine && lastAction === diff.action && line.boundingBox.top === lastLine.boundingBox.top) {
-              // Extend the current highlight group
-              highlightGroup.push(glyph);
-            } else {
-              // Create a highlight annotation for the previous group
-              if (highlightGroup.length > 0 && lastLine) {
-                createHighlightAnnotation(highlightGroup, lastLine, lastAction, pageIndex, instance1, instance2);
-              }
-              // Start a new highlight group
-              highlightGroup = [glyph];
-              lastAction = diff.action;
-              lastLine = line;
-            }
-          }
-        }
-      }
-    
-      // Create a highlight annotation for the last group
-      if (highlightGroup.length > 0 && lastLine) {
-        createHighlightAnnotation(highlightGroup, lastLine, lastAction, pageIndex, instance1, instance2);
-      }
-    
-      function createHighlightAnnotation(highlightGroup, lastLine, lastAction, pageIndex, instance1, instance2) {
-        const startGlyph = highlightGroup[0];
-        const endGlyph = highlightGroup[highlightGroup.length - 1];
-    
-        const newBoundingBox = new PSPDFKit.Geometry.Rect({
-          top: lastLine.boundingBox.top,
-          left: startGlyph.left,
-          width: endGlyph.left + endGlyph.width - startGlyph.left,
-          height: lastLine.boundingBox.height,
-        });
-    
-        const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-          boundingBox: newBoundingBox,
-          pageIndex,
-          color: lastAction === 'INSERT' ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
-          opacity: 0.8,
-          rects: PSPDFKit.Immutable.List.of(newBoundingBox),
-        });
-    
-        // Add to the correct instance based on action
-        const instanceToAdd = (lastAction === 'DELETE') ? instance1 : instance2;
-        instanceToAdd.create(highlightAnnotation);
-      }
-
-      }
-
-    }
-
-    async function compareText3(instance1, instance2){
+    async function compareText(instance1, instance2){
       const totalPageCountLeft = instance1.totalPageCount;
       const totalPageCountRight = instance2.totalPageCount;
 
@@ -866,195 +663,42 @@
         return differingCharacters;
       }
       
-      
-
       for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
         const [textLines1, textLines2] = await Promise.all([
           instance1.textLinesForPageIndex(pageIndex),
           instance2.textLinesForPageIndex(pageIndex),
         ]);
       
-        let index1 = 0, index2 = 0;
-        let lineShift = 0;
+          let index1 = 0, index2 = 0;
+          let lineShift = 0;
 
-      // Get glyphs for each instance with their position in CSV format
-      let glyphs1 = await instance1.getPageGlyphs(0);
-      let glyphFormatted1 = getFormattedGlyps(glyphs1);
+        // Get glyphs for each instance with their position in CSV format
+        let glyphs1 = await instance1.getPageGlyphs(0);
+        let glyphFormatted1 = getFormattedGlyps(glyphs1);
 
-      let glyphs2 = await instance2.getPageGlyphs(0);
-      let glyphFormatted2 = getFormattedGlyps(glyphs2);
+        let glyphs2 = await instance2.getPageGlyphs(0);
+        let glyphFormatted2 = getFormattedGlyps(glyphs2);
 
-      console.log("Instance 1: ");
-      console.log(glyphFormatted1);
-      //console.log("Instance 2: ");
-      //console.log(glyphFormatted2);
+        console.log("Instance 1: ");
+        console.log(glyphFormatted1);
+        //console.log("Instance 2: ");
+        //console.log(glyphFormatted2);
 
-      console.log("text lines1");
-      console.log(textLines1.toArray());
+        console.log("text lines1");
+        console.log(textLines1.toArray());
 
-      const pageTextStructured1 = buildTextStructure(textLines1.toArray(), glyphFormatted1);
-      const pageTextStructured2 = buildTextStructure(textLines2.toArray(), glyphFormatted2);
-      console.log("pageTextStructured1");
-      console.log(pageTextStructured1);
-      console.log("pageTextStructured2");
-      console.log(pageTextStructured2);
+        const pageTextStructured1 = buildTextStructure(textLines1.toArray(), glyphFormatted1);
+        const pageTextStructured2 = buildTextStructure(textLines2.toArray(), glyphFormatted2);
+        console.log("pageTextStructured1");
+        console.log(pageTextStructured1);
+        console.log("pageTextStructured2");
+        console.log(pageTextStructured2);
 
-      compareDocuments(pageTextStructured1, pageTextStructured2, instance1, instance2);
+        compareDocuments(pageTextStructured1, pageTextStructured2, instance1, instance2);
 
       }
 
     }
-
-    async function compareText(instance1, instance2) {
-
-
-      const totalPageCountLeft = instance1.totalPageCount;
-      const totalPageCountRight = instance2.totalPageCount;
-
-      const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
-
-      for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
-        const [textLines1, textLines2] = await Promise.all([
-          instance1.textLinesForPageIndex(pageIndex),
-          instance2.textLinesForPageIndex(pageIndex),
-        ]);
-      
-        let index1 = 0, index2 = 0;
-        let lineShift = 0;
-      
-        while(index1 < textLines1.size && index2 < textLines2.size) {
-          const line1 = textLines1.get(index1);
-          const line2 = textLines2.get(index2);
-      
-          if(line1.contents === line2.contents) {
-            index1++;
-            index2++;
-            continue;
-          }
-      
-          const line1InText2 = textLines2.find(line => line.contents === line1.contents);
-          const line2InText1 = textLines1.find(line => line.contents === line2.contents);
-      
-          if(line1InText2 && !line2InText1) {
-            const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-              note: `Line added: "${line2.contents}"`,
-              boundingBox: line2.boundingBox,
-              pageIndex,
-              color: PSPDFKit.Color.GREEN,
-              opacity: 0.5,
-              rects: PSPDFKit.Immutable.List.of(line2.boundingBox),
-            });
-      
-            console.log("line");
-            console.log(highlightAnnotation);
-            instance2.create(highlightAnnotation);
-            lineShift += line2.boundingBox.height;
-      
-            index2++;
-            continue;
-          }
-      
-          if(line2InText1 && !line1InText2) {
-            const newBoundingBox = new PSPDFKit.Geometry.Rect({
-              top: line1.boundingBox.top, //- lineShift,
-              left: line1.boundingBox.left,
-              width: line1.boundingBox.width,
-              height: line1.boundingBox.height
-            });
-      
-            const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-              note: `Line removed: "${line1.contents}"`,
-              boundingBox: newBoundingBox,
-              pageIndex,
-              color: PSPDFKit.Color.RED,
-              opacity: 0.5,
-              rects: PSPDFKit.Immutable.List.of(newBoundingBox),
-            });
-      
-            instance1.create(highlightAnnotation);
-      
-            index1++;
-            continue;
-          }
-      
-          if(line1InText2 && line2InText1) {
-            index1++;
-            index2++;
-            continue;
-          }
-      
-          const wordDiffs = Diff.diffWords(line1.contents, line2.contents);
-          wordDiffs.forEach(wordDiff => {
-            if (wordDiff.added || wordDiff.removed) {
-              const note = wordDiff.added ? `Added: "${wordDiff.value}"` : `Deleted: "${wordDiff.value}"`;
-      
-              const newBoundingBox = wordDiff.removed
-                ? new PSPDFKit.Geometry.Rect({
-                  top: line1.boundingBox.top, //- lineShift,
-                  left: line1.boundingBox.left,
-                  width: line1.boundingBox.width,
-                  height: line1.boundingBox.height
-                  })
-                : line2.boundingBox;
-
-              const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-                note,
-                boundingBox: newBoundingBox,
-                pageIndex,
-                color: wordDiff.added ? PSPDFKit.Color.GREEN : PSPDFKit.Color.RED,
-                opacity: 0.5,
-                rects: PSPDFKit.Immutable.List.of(newBoundingBox),
-              });
-      
-              (wordDiff.added ? instance2 : instance1).create(highlightAnnotation);
-            }
-          });
-      
-          index1++;
-          index2++;
-        }
-      
-        while(index1 < textLines1.size) {
-          const line1 = textLines1.get(index1);
-      
-          const newBoundingBox = new PSPDFKit.Geometry.Rect({
-            ...line1.boundingBox,
-            top: line1.boundingBox.top - lineShift,
-          });
-      
-          const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-            note: `Line removed: "${line1.contents}"`,
-            boundingBox: newBoundingBox,
-            pageIndex,
-            color: PSPDFKit.Color.RED,
-            opacity: 0.5,
-            rects: PSPDFKit.Immutable.List.of(newBoundingBox),
-          });
-      
-          instance1.create(highlightAnnotation);
-      
-          index1++;
-        }
-      
-        while(index2 < textLines2.size) {
-          const line2 = textLines2.get(index2);
-      
-          const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-            note: `Line added: "${line2.contents}"`,
-            boundingBox: line2.boundingBox,
-            pageIndex,
-            color: PSPDFKit.Color.GREEN,
-            opacity: 0.5,
-            rects: PSPDFKit.Immutable.List.of(line2.boundingBox),
-          });
-      
-          instance2.create(highlightAnnotation);
-      
-          index2++;
-        }
-      }
-    }
-    
 
     PSPDFKit.load({
       container: "#pspdfkitLeft",
@@ -1076,11 +720,7 @@
 
       window.setTimeout(() => {
         if (leftViewer && rightViewer) {
-          //compareText(leftViewer, rightViewer);
-          //compareTextAI(leftViewer, rightViewer);
-          //compareTextAI2(leftViewer, rightViewer);
-          //compareText2(leftViewer, rightViewer);
-          compareText3(leftViewer, rightViewer);
+          compareText(leftViewer, rightViewer);
         }
       }, 250);
 
