@@ -150,164 +150,176 @@
     defaultItemsLeft.push(uploadLeft);
     defaultItemsRight.push(uploadRight);
 
-    function getFormattedGlyps(glyphs){
-
-      function truncateNumbers(obj) {
-        if (typeof obj === "number") {
-          return parseFloat(obj.toFixed(0));
-        } else if (typeof obj === "object" && obj !== null) {
-          if (Array.isArray(obj)) {
-            return obj.map(item => truncateNumbers(item));
-          } else {
-            const newObj = {};
-            for (const key in obj) {
-              newObj[key] = truncateNumbers(obj[key]);
-            }
-            return newObj;
-          }
-        }
-        return obj;
+    function simplifyArray(originalArray) {
+      let simplifiedArray = [];
+    
+      for (let i = 0; i < originalArray.length; i++) {
+        const originalItem = originalArray[i];
+        const simplifiedItem = {
+          //pageNumber: 0, // Assuming all items are from page number 0
+          //lines: {
+            lineText: originalItem.lineText,
+            lineNumber: i // Using array index as line number, starting at 0
+          //}
+        };
+        simplifiedArray.push(simplifiedItem);
       }
     
-      // Assuming you have the flattened array
-      const flattenedArray = glyphs.toArray();
-    
-      // Truncate numbers to two decimal points
-      const truncatedArray = truncateNumbers(flattenedArray);
-    
-      // Convert the truncated array to a JSON string
-      const jsonString = JSON.stringify(truncatedArray);
-    
-      // Log or use the JSON string as needed
-      //console.log(jsonString);
-  
-
-      const optimizedJson = truncatedArray.map(item => {
-        const { c, rect } = item;
-        let width = rect.get("width");
-        let height = rect.get("height");
-        let top = rect.get("top");
-        let left = rect.get("left");
-        return { c, width, height, top, left };
-      });
-
-      return optimizedJson;
-    
-      //console.log(JSON.stringify(optimizedJson, null, 2));
-    
-      // Create the formatted string
-      /*let result = '';
-      for (const item of optimizedJson) {
-        const char = item.c;
-        const left = truncateNumbers(item.rect.toJS().left);
-        const top = truncateNumbers(item.rect.toJS().top);
-        const width = truncateNumbers(item.rect.toJS().width);
-        const height = truncateNumbers(item.rect.toJS().height);
-    
-        //result += `${char},${left},${top};`;
-        // Check for newline or carriage return and replace with their names
-        if (char === '\n') {
-          result += `\n,${left},${top},${width},${height};`;
-        } else if (char === '\r') {
-          result += `\r,${left},${top},${width},${height};`;
-        } else {
-           result += `${char},${left},${top},${width},${height};`;
-           //result += `${char},${width};`;
-        }
-      }
-    
-      // Remove the trailing semicolon
-      result = result.slice(0, -1);
-      return result;*/
+      return simplifiedArray;
     }
+    
+
+    // Sample FNV-1a hash function for simplicity
+    function hashFnv32a(str) {
+      let hval = 0x811c9dc5;
+      for (let i = 0; i < str.length; ++i) {
+        hval ^= str.charCodeAt(i);
+        hval += (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+      }
+      return hval >>> 0;
+    }
+
+    // Simhash implementation
+    function simhash(text) {
+      const features = text.split(/\s+/);  // naive tokenization by whitespace
+      const bitLength = 32;  // using 32-bit hash function
+      const v = new Array(bitLength).fill(0);
+
+      for (const feature of features) {
+        const hash = hashFnv32a(feature);
+        for (let i = 0; i < bitLength; i++) {
+          const mask = 1 << i;
+          v[i] += (hash & mask) ? 1 : -1;
+        }
+      }
+
+      let fingerprint = 0;
+      for (let i = 0; i < bitLength; i++) {
+        if (v[i] > 0) {
+          fingerprint |= 1 << i;
+        }
+      }
+
+      return fingerprint >>> 0;
+    }
+
+    // Function to calculate Simhash for each page of a document
+    function calculatePageSimhash(pageLines) {
+      let pageSimhash;
+      let pageText;
+
+      for (const pageLine of pageLines) {
+        //const pageNumber = page.pageNumber;
+        //let pageText = pageLine;
+        //for (const line in page) {
+          //if (line !== 'pageNumber') {
+            pageText += pageLine.lineText + ' ';
+          //}
+        //}
+        const hash = simhash(pageText.trim());
+        pageSimhash = hash;
+      }
+
+      return pageSimhash;
+    }
+
+    function combinePagesToSinglePage(lines) {
+
+      let currentLineNumber = 0; // Initialize line number for the new combined page
+      let pageText = "";
+
+      // Loop through each line in the current page
+      for (const lineNumber in lines) {
+        // Check if the property is a lineText object (skip pageHash and pageNumber)
+        if (lines[lineNumber].hasOwnProperty('lineText')) {
+          pageText += lines[lineNumber].lineText;
+          currentLineNumber++;  // Increment the line number for the next line
+        }
+      }
+      
+    
+      return pageText;
+    }    
 
     async function compareTextAI(instance1, instance2) {
 
-      //new { left: 84.21, bottom: 103.28, right: 114.21, top: 77.28, width: 30, height: 26 }
-      /*let annotation1 = new PSPDFKit.Annotations.HighlightAnnotation({
-        pageIndex: 0,  
-        color : new PSPDFKit.Color({ r: 255, g: 0, b: 0 }),
-        boundingBox: new PSPDFKit.Geometry.Rect({
-          left:  84.21, 
-          bottom: 103.28, 
-          right: 114.21, 
-          top: 77.28,
-        width: 30,
-      height: 26 }),
-        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
-          left: 84.21, 
-          bottom: 103.28, 
-          right: 114.21, 
-          top: 77.28,
-          width: 30,
-          height: 26 }),
-      
-      ])
-      });
-      await instance1.create(annotation1);
+      const totalPageCountLeft = instance1.totalPageCount;
+      const totalPageCountRight = instance2.totalPageCount;
 
-      // new: { left: 109.21, bottom: 103.28, right: 123.21, top: 77.28, width: 14, height: 26 }
-      let annotation2 = new PSPDFKit.Annotations.HighlightAnnotation({
-        pageIndex: 0,  
-        color : new PSPDFKit.Color({ r: 255, g: 0, b: 0 }),
-        boundingBox: new PSPDFKit.Geometry.Rect({
-          left: 109.21,
-          bottom: 103.28, 
-          right:  123.21, 
-          top: 77.28,
-          width: 14,
-      height: 26 }),
-        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
-          left: 109.21, 
-          bottom: 103.28, 
-          right:  123.21, 
-          top: 77.28,
-        width: 14,
-      height: 26 }),
-      
-      ])
-      });
-      await instance1.create(annotation2);
+      const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
 
-      //{left: 298.73, bottom: 103.28, right: 335.68, top: 77.28, width: 36.95, height: 26 }
-      let annotation3 = new PSPDFKit.Annotations.HighlightAnnotation({
-        pageIndex: 0,  
-        color : new PSPDFKit.Color({ r: 255, g: 0, b: 0 }),
-        boundingBox: new PSPDFKit.Geometry.Rect({
-          left: 298.73,
-          bottom: 103.28, 
-          right:  335.68, 
-          top: 77.28,
-          width: 36.95,
-      height: 26 }),
-        rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({
-          left: 298.73, 
-          bottom: 103.28, 
-          right:  335.68, 
-          top: 77.28,
-        width: 36.95,
-      height: 26 }),
-      
-      ])
-      });
-      await instance1.create(annotation3);*/
+      let documentText1 = [];
+      let documentText2 = [];
 
-    
-      // Get glyphs for each instance with their position in CSV format
-      let glyphs1 = await instance1.getPageGlyphs(0);
-      let glyphFormatted1 = getFormattedGlyps(glyphs1);
-      let linesInstance1 = await instance1.textLinesForPageIndex(0);
-      console.log("lines 1");
-      console.log(linesInstance1);
-      let linesInstance2 = await instance2.textLinesForPageIndex(0);
-      console.log("lines 2");
-      console.log(linesInstance2);
+       // Calculate Simhash for each page
+       //const pageSimhashes1 = calculatePageSimhash(documentText1);
+       //console.log('Simhash for document 1:', pageSimhashes1);
 
-      let glyphs2 = await instance2.getPageGlyphs(0);
-      let glyphFormatted2 = getFormattedGlyps(glyphs2);
+      // Get the text for the left document
+      for(let pageIndex = 0; pageIndex < totalPageCountLeft; pageIndex++) {
+        const textLines1 = await Promise.all([
+          instance1.textLinesForPageIndex(pageIndex)
+        ]);
 
-      console.log("Instance 1: " + glyphFormatted1);
-     console.log("Instance 2: " + glyphFormatted2);
+        // Get glyphs for each instance with their position in CSV format
+        let glyphs1 = await instance1.getPageGlyphs(pageIndex);
+        let glyphFormatted1 = getFormattedGlyps(glyphs1);
+        let linesInstance1 = await instance1.textLinesForPageIndex(pageIndex);
+
+        let textStructure1 = buildTextStructure(linesInstance1.toArray(), glyphFormatted1);
+        let simplifiedStructure1 = simplifyArray(textStructure1);
+        const pageSimhashes1 = calculatePageSimhash(simplifiedStructure1);
+        //console.log('Simhash for document 2:', pageSimhashes1);
+
+        let pageText = combinePagesToSinglePage(simplifiedStructure1);
+
+        documentText1.push({
+          pageHash: pageSimhashes1,
+          pageNumber: pageIndex,
+          //...simplifiedStructure1
+          pageText
+        });
+
+      }
+
+      // Get the text for the right document
+      for(let pageIndex = 0; pageIndex < totalPageCountRight; pageIndex++) {
+        const textLines2 = await Promise.all([
+          instance2.textLinesForPageIndex(pageIndex)
+        ]);
+
+        // Get glyphs for each instance with their position in CSV format
+        let glyphs2 = await instance2.getPageGlyphs(pageIndex);
+        let glyphFormatted2 = getFormattedGlyps(glyphs2);
+        let linesInstance2 = await instance2.textLinesForPageIndex(pageIndex);
+
+        let textStructure2 = buildTextStructure(linesInstance2.toArray(), glyphFormatted2);
+        let simplifiedStructure2 = simplifyArray(textStructure2);
+
+        let pageText = combinePagesToSinglePage(simplifiedStructure2);
+
+        // Calculate Simhash for each page
+        const pageSimhashes2 = calculatePageSimhash(simplifiedStructure2);
+        //console.log('Simhash for document 2:', pageSimhashes2);
+
+        documentText2.push({
+          pageHash: pageSimhashes2,
+          pageNumber: pageIndex,
+          //...simplifiedStructure2
+          pageText
+        });
+      }
+
+      let documentTextJSON1 = JSON.stringify(documentText1);
+      let documentTextJSON2 = JSON.stringify(documentText2);
+
+      //console.log("Document Text 1:");
+      //console.log(JSON.stringify(documentText1));
+      //console.log(documentText1);
+
+      //console.log("Document Text 2:");
+      //console.log(documentTextJSON2);
+      //console.log(documentText2);
 
      const instructions = "your job is to parse two CSVs and compare them, they have the following format: <character>,<top position>,<left position>,<width>,<height> put the words and sentences based on the character together, the characters are in reading order. for example this P,74,79,8,13;D,84,79,10,13;F,96,79,7,13;s,105,82,6,10; translates to 'PDFs' after parsing both CSVs, compare the text of both CSVs and tell me if there are differences. your output should be in teh format of pspdfkit web highlight annotations. i want to create as few highlight annotations as possible to show all changes in the document. remember that th format for pspdfkit highlight annotations is as follows: {pageIndex: 0,rects: boundingBoxes,boundingBox: PSPDFKit.Geometry.Rect.union(boundingBoxes)} please group highlight annotations for neighbouring changed characters together into one as long as they are in the same word, don't list them as seperate rects in an array, but actually calculate one new rect. here is an example annotation  { pageIndex: 0, color : new PSPDFKit.Color({ r: 0, g: 255, b: 255 }), boundingBox: new PSPDFKit.Geometry.Rect({ left: 82, bottom: 92, right: 101, top: 79, width: 17, height: 13 }), rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({ left: 82, bottom: 92, right: 101, top: 79, width: 17, height: 13 })]) }); your output should be strictly a json object with array element for each highlight annotation containing only the left, bottom, right, top, width and height property for each annotation only, without new lines \n or any other text, for example: { 'left': 74, 'bottom': 92, 'right': 112, 'top': 79, 'width': 38, 'height': 13 } start the annotation json with this keyword: 'annot:'" ;
      const userContent = "CSV1: P,74,79,8,13;D,84,79,10,13;F,96,79,7,13;s,105,82,6,10;,,112,89,3,5; ,117,71,5,20;d,122,78,8,14;i,133,78,2,13;t,137,82,8,13;i,147,78,2,13;t,151,80,6,12;a,158,82,7,10;l,168,78,2,14; ,171,71,5,20;d,177,78,8,14;o,187,82,9,10;c,198,82,7,10;s,206,82,6,10; ,213,71,5,20;s,218,82,6,10;o,226,82,9,10; ,236,71,5,20;f,241,78,6,14;i,248,78,2,13;n,253,82,8,9;e,263,82,8,10;,,272,89,3,5;,275,91,0,0;CSV2: P,74,79,8,13;B,84,79,10,13;A,96,79,7,13;s,105,82,6,10;,,112,89,3,5; ,117,71,5,20;d,122,78,8,14;x,133,78,2,13;g,137,82,8,13;i,147,78,2,13;t,151,80,6,12;a,158,82,7,10;l,168,78,2,14; ,171,71,5,20;d,177,78,8,14;o,187,82,9,10;c,198,82,7,10;s,206,82,6,10; ,213,71,5,20;s,218,82,6,10;o,226,82,9,10; ,236,71,5,20;f,241,78,6,14;i,248,78,2,13;n,253,82,8,9;e,263,82,8,10;,,272,89,3,5;,275,91,0,0;";
@@ -337,8 +349,10 @@
       })
       .then(async response => {
         let resp = await response.json();
+        consol.log("response");
         console.log(resp);
-        let message = resp["choices"][0]["message"]["content"];
+      });
+        /*let message = resp["choices"][0]["message"]["content"];
         console.log(message);
 
         // Extract the JSON part from the string
@@ -416,96 +430,162 @@
         //console.log("annot created");
       })
       .then(data => console.log(data))
-      .catch((error) => console.error('Error:', error));
+      .catch((error) => console.error('Error:', error));*/
 
-      //{left: 83.52, bottom: 103.28, right: 111.46, top: 77.28, width: 27.94, height: 26 }
-      //{left: 167.43, bottom: 103.28, right: 186.06, top: 77.28, width: 18.63, height: 26 }
-      
-
-      //console.log("annot created");
 
 
     }
 
+    function getFormattedGlyps(glyphs){
+
+      function truncateNumbers(obj) {
+        if (typeof obj === "number") {
+          return parseFloat(obj.toFixed(0));
+        } else if (typeof obj === "object" && obj !== null) {
+          if (Array.isArray(obj)) {
+            return obj.map(item => truncateNumbers(item));
+          } else {
+            const newObj = {};
+            for (const key in obj) {
+              newObj[key] = truncateNumbers(obj[key]);
+            }
+            return newObj;
+          }
+        }
+        return obj;
+      }
+    
+      // Assuming you have the flattened array
+      const flattenedArray = glyphs.toArray();
+    
+      // Truncate numbers to two decimal points
+      const truncatedArray = truncateNumbers(flattenedArray);
+    
+      // Convert the truncated array to a JSON string
+      const jsonString = JSON.stringify(truncatedArray);
+    
+      // Log or use the JSON string as needed
+      //console.log(jsonString);
+  
+
+      const optimizedJson = truncatedArray.map(item => {
+        const { c, rect } = item;
+        let width = rect.get("width");
+        let height = rect.get("height");
+        let top = rect.get("top");
+        let left = rect.get("left");
+        return { c, width, height, top, left };
+      });
+
+      return optimizedJson;
+    
+      //console.log(JSON.stringify(optimizedJson, null, 2));
+    
+      // Create the formatted string
+      /*let result = '';
+      for (const item of optimizedJson) {
+        const char = item.c;
+        const left = truncateNumbers(item.rect.toJS().left);
+        const top = truncateNumbers(item.rect.toJS().top);
+        const width = truncateNumbers(item.rect.toJS().width);
+        const height = truncateNumbers(item.rect.toJS().height);
+    
+        //result += `${char},${left},${top};`;
+        // Check for newline or carriage return and replace with their names
+        if (char === '\n') {
+          result += `\n,${left},${top},${width},${height};`;
+        } else if (char === '\r') {
+          result += `\r,${left},${top},${width},${height};`;
+        } else {
+           result += `${char},${left},${top},${width},${height};`;
+           //result += `${char},${width};`;
+        }
+      }
+    
+      // Remove the trailing semicolon
+      result = result.slice(0, -1);
+      return result;*/
+    }
+
+    function buildTextStructure(pageLines, characters) {
+      const structure = [];
+  
+      function isCharInLine(char, line) {
+          return char.top >= line.boundingBox.top && char.top <= line.boundingBox.bottom;
+      }
+  
+      for (const line of pageLines) {
+          const lineStructure = {
+              lineText: line.contents,
+              boundingBox: line.boundingBox,
+              words: []
+          };
+  
+          let wordsFromLineText = line.contents.split(/\s+/);
+          let wordIndex = 0;
+  
+          let currentWord = {
+              wordText: '',
+              boundingBox: null,
+              characters: []
+          };
+  
+          let lastChar = null;
+  
+          for (let i = 0; i < characters.length; i++) {
+              const char = characters[i];
+              const isLastChar = i === characters.length - 1 || !isCharInLine(characters[i + 1], line);
+  
+              if (isCharInLine(char, line)) {
+                  // Add the character to the current word
+                  currentWord.wordText += char.c;
+                  currentWord.characters.push(char);
+  
+                  // Update bounding box
+                  if (currentWord.boundingBox === null) {
+                      currentWord.boundingBox = {
+                          height: line.boundingBox.height,
+                          top: line.boundingBox.top,
+                          left: char.left,
+                          width: char.width
+                      };
+                  } else {
+                      const charRight = char.left + char.width;
+                      const currentWordRight = currentWord.boundingBox.left + currentWord.boundingBox.width;
+                      if (charRight > currentWordRight) {
+                          currentWord.boundingBox.width = charRight - currentWord.boundingBox.left;
+                      }
+                  }
+  
+                  // Check if the currentWord matches the word from lineText
+                  if (currentWord.wordText === wordsFromLineText[wordIndex]) {
+                      lineStructure.words.push(currentWord);
+                      wordIndex++; // Move to next word
+  
+                      // Reset the current word
+                      currentWord = {
+                          wordText: '',
+                          boundingBox: null,
+                          characters: []
+                      };
+                  }
+  
+                  lastChar = char;
+              }
+          }
+  
+          structure.push(lineStructure);
+      }
+  
+      return structure;
+  }
+  
     async function compareText(instance1, instance2){
       const totalPageCountLeft = instance1.totalPageCount;
       const totalPageCountRight = instance2.totalPageCount;
 
       const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
 
-      function buildTextStructure(pageLines, characters) {
-        const structure = [];
-    
-        function isCharInLine(char, line) {
-            return char.top >= line.boundingBox.top && char.top <= line.boundingBox.bottom;
-        }
-    
-        for (const line of pageLines) {
-            const lineStructure = {
-                lineText: line.contents,
-                boundingBox: line.boundingBox,
-                words: []
-            };
-    
-            let wordsFromLineText = line.contents.split(/\s+/);
-            let wordIndex = 0;
-    
-            let currentWord = {
-                wordText: '',
-                boundingBox: null,
-                characters: []
-            };
-    
-            let lastChar = null;
-    
-            for (let i = 0; i < characters.length; i++) {
-                const char = characters[i];
-                const isLastChar = i === characters.length - 1 || !isCharInLine(characters[i + 1], line);
-    
-                if (isCharInLine(char, line)) {
-                    // Add the character to the current word
-                    currentWord.wordText += char.c;
-                    currentWord.characters.push(char);
-    
-                    // Update bounding box
-                    if (currentWord.boundingBox === null) {
-                        currentWord.boundingBox = {
-                            height: line.boundingBox.height,
-                            top: line.boundingBox.top,
-                            left: char.left,
-                            width: char.width
-                        };
-                    } else {
-                        const charRight = char.left + char.width;
-                        const currentWordRight = currentWord.boundingBox.left + currentWord.boundingBox.width;
-                        if (charRight > currentWordRight) {
-                            currentWord.boundingBox.width = charRight - currentWord.boundingBox.left;
-                        }
-                    }
-    
-                    // Check if the currentWord matches the word from lineText
-                    if (currentWord.wordText === wordsFromLineText[wordIndex]) {
-                        lineStructure.words.push(currentWord);
-                        wordIndex++; // Move to next word
-    
-                        // Reset the current word
-                        currentWord = {
-                            wordText: '',
-                            boundingBox: null,
-                            characters: []
-                        };
-                    }
-    
-                    lastChar = char;
-                }
-            }
-    
-            structure.push(lineStructure);
-        }
-    
-        return structure;
-    }
-    
       function createHighlightAnnotation(boundingBox, type, pageIndex, instance) {
         const color = type === 'DELETE' ? PSPDFKit.Color.RED : PSPDFKit.Color.GREEN;
         const note = type === 'DELETE' ? `Deleted` : `Inserted`;
@@ -702,7 +782,7 @@
 
     PSPDFKit.load({
       container: "#pspdfkitLeft",
-      document: "PDF poem v1.pdf",
+      document: "PDF poem v5.pdf",
       toolbarItems: defaultItemsLeft,
       licenseKey: licenseKey
     })
@@ -721,6 +801,7 @@
       window.setTimeout(() => {
         if (leftViewer && rightViewer) {
           compareText(leftViewer, rightViewer);
+          compareTextAI(leftViewer, rightViewer, 0);
         }
       }, 250);
 
@@ -731,7 +812,7 @@
 
     PSPDFKit.load({
       container: "#pspdfkitRight",
-      document: "PDF poem v3.pdf",
+      document: "PDF poem v4.pdf",
       toolbarItems: defaultItemsRight,
       licenseKey: licenseKey
 
