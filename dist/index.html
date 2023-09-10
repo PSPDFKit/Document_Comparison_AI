@@ -306,6 +306,8 @@
         let linesInstance1 = await instance1.textLinesForPageIndex(pageIndex);
 
         let textStructure1 = buildTextStructure(linesInstance1.toArray(), glyphFormatted1);
+        console.log("textStructure1");
+        console.log(textStructure1);
         let simplifiedStructure1 = simplifyArray(textStructure1);
         const pageSimhashes1 = calculatePageSimhash(simplifiedStructure1);
         //console.log('Simhash for document 2:', pageSimhashes1);
@@ -418,6 +420,39 @@
         checkActions(documentActions2.document2, instance2, true);
 
         // Perform the regular document comparison again.   
+        console.log("documentStructure1");
+        console.log(documentStructure1);
+        console.log("documentStructure2");
+        console.log(documentStructure2);
+        await deleteAllHighlightAnnotations(instance1);
+        await deleteAllHighlightAnnotations(instance2);
+
+
+        // Shift documentStructure according to actions
+        // Iterate through actionsArray and apply actions to documentStructure1
+        documentActions1["document1"].forEach((actionObj, index) => {
+          if (actionObj.action === 'none') {
+            // The index to move the current element to
+            const targetIndex = actionObj.compareTo;
+
+            if (targetIndex !== null && targetIndex !== index) {
+              // Remove the element at the current index and store it
+              const removedElement = documentStructure1.splice(index, 1)[0];
+
+              // Insert the element back at the target index
+              documentStructure1.splice(targetIndex, 0, removedElement);
+            }
+          }
+        });
+
+        console.log("shifted");
+        console.log(documentStructure1);
+
+        console.log("comparing");
+        console.log(documentStructure1);
+        console.log(documentStructure2);
+
+        compareDocuments(documentStructure1[1], documentStructure2[1], instance1, instance2);
       });
 
     }
@@ -677,7 +712,6 @@
                 width: char2.width,
                 height: word2.boundingBox.height
               }
-
               createHighlightAnnotation(boundingBoxChar1, 'DELETE', pageIndex, instance1);
               createHighlightAnnotation(boundingBoxChar2, 'INSERT', pageIndex, instance2);
             }
@@ -723,10 +757,30 @@
       return differingCharacters;
     }
     
+    async function deleteAllHighlightAnnotations(instance) {
+      // Loop through each page in the document
+      const totalPages = instance.totalPageCount;
+      for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+        // Fetch all annotations for the current page
+        const annotations = await instance.getAnnotations(pageIndex);
+        
+        // Filter out highlight annotations
+        const highlightAnnotations = annotations.filter(
+          annotation => annotation instanceof PSPDFKit.Annotations.HighlightAnnotation
+        );
+    
+        // Delete each highlight annotation
+        for (const highlightAnnotation of highlightAnnotations) {
+          await instance.delete(highlightAnnotation.id);
+        }
+      }
+    }
+    
+
     // The main offline compare function
-   let pageTextStructured1;
-   let pageTextStructured2;
-    async function compareText(instance1, instance2){
+   let documentStructure1 = [];
+   let documentStructure2 = [];
+  async function compareText(instance1, instance2){
       const totalPageCountLeft = instance1.totalPageCount;
       const totalPageCountRight = instance2.totalPageCount;
 
@@ -742,26 +796,23 @@
           let lineShift = 0;
 
         // Get glyphs for each instance with their position in CSV format
-        let glyphs1 = await instance1.getPageGlyphs(0);
+        let glyphs1 = await instance1.getPageGlyphs(pageIndex);
         let glyphFormatted1 = getFormattedGlyps(glyphs1);
 
-        let glyphs2 = await instance2.getPageGlyphs(0);
+        let glyphs2 = await instance2.getPageGlyphs(pageIndex);
         let glyphFormatted2 = getFormattedGlyps(glyphs2);
 
-        console.log("Instance 1: ");
-        console.log(glyphFormatted1);
-        //console.log("Instance 2: ");
-        //console.log(glyphFormatted2);
-
-        console.log("text lines1");
-        console.log(textLines1.toArray());
 
         pageTextStructured1 = buildTextStructure(textLines1.toArray(), glyphFormatted1);
         pageTextStructured2 = buildTextStructure(textLines2.toArray(), glyphFormatted2);
-        console.log("pageTextStructured1");
+        /*console.log("pageTextStructured1");
         console.log(pageTextStructured1);
         console.log("pageTextStructured2");
-        console.log(pageTextStructured2);
+        console.log(pageTextStructured2);*/
+
+        // We will need this later to compare the documents again
+        documentStructure1.push(pageTextStructured1);
+        documentStructure2.push(pageTextStructured2);
 
         // The inner compare function
         compareDocuments(pageTextStructured1, pageTextStructured2, instance1, instance2);
