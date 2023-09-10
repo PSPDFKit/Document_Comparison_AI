@@ -241,6 +241,45 @@
       return pageText;
     }    
 
+    function checkActions(documentObj, instance, isSecondDocument) {
+      if (!documentObj || !Array.isArray(documentObj)) {
+        console.error('Invalid input: Expected an array.');
+        return;
+      }
+      
+      let i = 0;
+      documentObj.forEach(async (element) => {
+        const action = element.action;
+        let note = "";
+        
+        // Add your logic based on the action here
+        if (action === 'removed') {
+          note = "This page was removed!";
+        } else if (action === 'none' && !isSecondDocument) {
+          note = "This page shifted to index " + element.compareTo;
+        } else if (action === 'added') {
+          note = "This page was added!"
+        } else {
+          console.warn(`Unknown action: ${action}`);
+        }
+
+        if(note !== ""){
+          const noteAnnotation = new PSPDFKit.Annotations.NoteAnnotation({
+            pageIndex: i,
+            text: { format: "plain", value : note },
+            boundingBox: new PSPDFKit.Geometry.Rect({ left: 10, top: 20, width: 30, height: 40 }),
+          });
+
+          i++;
+
+          await instance.create(noteAnnotation);
+        }else{
+          i++;
+        }
+        
+      });
+    }
+
     async function compareTextAI(instance1, instance2) {
 
       const totalPageCountLeft = instance1.totalPageCount;
@@ -321,8 +360,13 @@
       //console.log(documentTextJSON2);
       //console.log(documentText2);
 
-     const instructions = "your job is to parse two CSVs and compare them, they have the following format: <character>,<top position>,<left position>,<width>,<height> put the words and sentences based on the character together, the characters are in reading order. for example this P,74,79,8,13;D,84,79,10,13;F,96,79,7,13;s,105,82,6,10; translates to 'PDFs' after parsing both CSVs, compare the text of both CSVs and tell me if there are differences. your output should be in teh format of pspdfkit web highlight annotations. i want to create as few highlight annotations as possible to show all changes in the document. remember that th format for pspdfkit highlight annotations is as follows: {pageIndex: 0,rects: boundingBoxes,boundingBox: PSPDFKit.Geometry.Rect.union(boundingBoxes)} please group highlight annotations for neighbouring changed characters together into one as long as they are in the same word, don't list them as seperate rects in an array, but actually calculate one new rect. here is an example annotation  { pageIndex: 0, color : new PSPDFKit.Color({ r: 0, g: 255, b: 255 }), boundingBox: new PSPDFKit.Geometry.Rect({ left: 82, bottom: 92, right: 101, top: 79, width: 17, height: 13 }), rects: new PSPDFKit.Immutable.List([new PSPDFKit.Geometry.Rect({ left: 82, bottom: 92, right: 101, top: 79, width: 17, height: 13 })]) }); your output should be strictly a json object with array element for each highlight annotation containing only the left, bottom, right, top, width and height property for each annotation only, without new lines \n or any other text, for example: { 'left': 74, 'bottom': 92, 'right': 112, 'top': 79, 'width': 38, 'height': 13 } start the annotation json with this keyword: 'annot:'" ;
-     const userContent = "CSV1: P,74,79,8,13;D,84,79,10,13;F,96,79,7,13;s,105,82,6,10;,,112,89,3,5; ,117,71,5,20;d,122,78,8,14;i,133,78,2,13;t,137,82,8,13;i,147,78,2,13;t,151,80,6,12;a,158,82,7,10;l,168,78,2,14; ,171,71,5,20;d,177,78,8,14;o,187,82,9,10;c,198,82,7,10;s,206,82,6,10; ,213,71,5,20;s,218,82,6,10;o,226,82,9,10; ,236,71,5,20;f,241,78,6,14;i,248,78,2,13;n,253,82,8,9;e,263,82,8,10;,,272,89,3,5;,275,91,0,0;CSV2: P,74,79,8,13;B,84,79,10,13;A,96,79,7,13;s,105,82,6,10;,,112,89,3,5; ,117,71,5,20;d,122,78,8,14;x,133,78,2,13;g,137,82,8,13;i,147,78,2,13;t,151,80,6,12;a,158,82,7,10;l,168,78,2,14; ,171,71,5,20;d,177,78,8,14;o,187,82,9,10;c,198,82,7,10;s,206,82,6,10; ,213,71,5,20;s,218,82,6,10;o,226,82,9,10; ,236,71,5,20;f,241,78,6,14;i,248,78,2,13;n,253,82,8,9;e,263,82,8,10;,,272,89,3,5;,275,91,0,0;";
+     const instructions = `i want to help a user track what changed from document1 (which is version1) to document2 (which is version2 of the same document). please look at the content of the pages and the page hashes and let me know which pages do you think were added/removed or remained largely the same (except for some minor content changes) from document1 to document2.
+     the output should be in the format of an array for each document. the array document1 and document2 have elements for each page they contain. if a page is present in document1 but not in document2, it's action is deleted and compareTo is null. If the page is still present in document2 (even though the content has changed slightly) the action is none and compareTo is the corresponding page index in document2. if a page that is not in document1 but in document2, it counds as action "added".
+     {"document1": [ { action: <added, removed, none>, compareTo: <pageIndex in document2 if action is none> }, ]}
+     {"document2": [ { action: <added, removed, none>, compareTo: <pageIndex in document1 if action is none> }, ]}
+     Your output should be strictly the json objects, no other text.`;
+
+     const userContent = "document1: " + documentTextJSON1 + " document2: " + documentTextJSON2;
 
 
       fetch('https://api.openai.com/v1/chat/completions', {
@@ -341,7 +385,8 @@
           },
             {
               "role": "user",
-              "content": "CSV1: " + glyphFormatted1 + " CSV2: " + glyphFormatted2,
+              content: userContent,
+              //"content": "CSV1: " + glyphFormatted1 + " CSV2: " + glyphFormatted2,
               //"content": userContent,
             }
           ]
@@ -349,90 +394,31 @@
       })
       .then(async response => {
         let resp = await response.json();
-        consol.log("response");
-        console.log(resp);
-      });
-        /*let message = resp["choices"][0]["message"]["content"];
+        console.log("response");
+        let message = resp["choices"][0]["message"]["content"];
         console.log(message);
 
-        // Extract the JSON part from the string
-        let jsonPart = message.split("annot:")[1];
-        jsonPart = jsonPart.replace(/'/g, '"');
-        console.log("json part: ");
-        console.log(jsonPart);
+        // Find the index where the second JSON object starts
+        const index = message.indexOf('{"document2":');
 
-        const regex = /annot: {.*?}(?=\n|$)/g;
-        const annotations = [];
+        // Extract and parse the first JSON object
+        const jsonString1 = message.slice(0, index).trim();
+        console.log(jsonString1);
+        const documentActions1 = JSON.parse(jsonString1);
 
-        let match;
-        while ((match = regex.exec(message)) !== null) {
-            // Remove the "annot: " prefix and parse the JSON
-            const jsonPart = match[0].replace("annot: ", "");
-            try {
-                const parsed = JSON.parse(jsonPart.replace(/'/g, "\"")); // Replacing single quotes with double quotes
-                annotations.push(parsed);
-            } catch (err) {
-                console.error("Failed to parse JSON", err);
-            }
-        }
+        // Extract and parse the second JSON object
+        const jsonString2 = message.slice(index).trim();
+        console.log(jsonString2);
+        const documentActions2 = JSON.parse(jsonString2);
 
-        console.log(annotations);
+        console.log(documentActions1); // Output first object
+        console.log(documentActions2); // Output second object
 
-        // Parse the JSON part to a JavaScript object
-        //let jsonArray = JSON.parse(jsonPart);
+        checkActions(documentActions1.document1, instance1, false);
+        checkActions(documentActions2.document2, instance2, true);
 
-        if (!Array.isArray(annotations)) {
-          annotations = [annotations];
-      }
-
-        // Loop through each JSON element and create a new HighlightAnnotation
-        annotations.forEach(rect => {
-          let annotation = new PSPDFKit.Annotations.HighlightAnnotation({
-            pageIndex: 0,
-            color: new PSPDFKit.Color({ r: 0, g: 255, b: 255 }),
-            boundingBox: new PSPDFKit.Geometry.Rect({
-              left: rect.left,
-              bottom: rect.bottom,
-              right: rect.right,
-              top: rect.top,
-              width: rect.width,
-              height: rect.height
-            }),
-            rects: new PSPDFKit.Immutable.List([
-              new PSPDFKit.Geometry.Rect({
-                left: rect.left,
-                bottom: rect.bottom,
-                right: rect.right,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height
-              })
-            ])
-          });
-          // Use your PSPDFKit instance to create the annotation
-          // Replace 'instance1' with your actual instance name
-          instance1.create(annotation)
-            .then(() => {
-              console.log("Annotation created");
-            })
-            .catch(err => {
-              console.error("Error creating annotation:", err);
-            });
-        });
-
-
-        // Now `annotations` is an array of objects that you can import into PSPDFKit
-        //console.log("creating this annot");
-        //console.log(annotations);
-        
-
-        //wait instance1.create(annotations);
-        //console.log("annot created");
-      })
-      .then(data => console.log(data))
-      .catch((error) => console.error('Error:', error));*/
-
-
+        // Perform the regular document comparison again.   
+      });
 
     }
 
@@ -580,169 +566,172 @@
       return structure;
   }
   
+    function createHighlightAnnotation(boundingBox, type, pageIndex, instance) {
+      const color = type === 'DELETE' ? PSPDFKit.Color.RED : PSPDFKit.Color.GREEN;
+      const note = type === 'DELETE' ? `Deleted` : `Inserted`;
+      pageIndex = 0;
+      const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
+        //note,
+        boundingBox: new PSPDFKit.Geometry.Rect(boundingBox), // Use the boundingBox parameter here.
+        pageIndex,
+        color,
+        opacity: 0.5,
+        rects: PSPDFKit.Immutable.List.of(new PSPDFKit.Geometry.Rect(boundingBox))
+      });
+    
+
+        instance.create(highlightAnnotation);
+    }
+    
+    async function compareDocuments(doc1, doc2, instance1, instance2) {
+      const pageIndex = 0;
+    
+      let i = 0, j = 0;
+      while (i < doc1.length || j < doc2.length) {
+        const line1 = doc1[i];
+        const line2 = doc2[j];
+    
+        // Both lines are the same, proceed to the next line in both documents
+        if (line1 && line2 && line1.lineText === line2.lineText) {
+          i++;
+          j++;
+          continue;
+        }
+    
+        // If we encounter different lines, we check for line shifts
+        let lineShiftDetected = false;
+    
+        // Check if the current line in doc1 appears further down in doc2
+        for (let k = j + 1; k < doc2.length; k++) {
+          if (line1 && line1.lineText === doc2[k].lineText) {
+            // Highlight lines in doc2[j:k] as 'INSERT'
+            for (let l = j; l < k; l++) {
+              createHighlightAnnotation(doc2[l].boundingBox, 'INSERT', pageIndex, instance2);
+            }
+            j = k;
+            lineShiftDetected = true;
+            break;
+          }
+        }
+    
+        // Check if the current line in doc2 appears further down in doc1
+        if (!lineShiftDetected) {
+          for (let k = i + 1; k < doc1.length; k++) {
+            if (line2 && line2.lineText === doc1[k].lineText) {
+              // Highlight lines in doc1[i:k] as 'DELETE'
+              for (let l = i; l < k; l++) {
+                createHighlightAnnotation(doc1[l].boundingBox, 'DELETE', pageIndex, instance1);
+              }
+              i = k;
+              lineShiftDetected = true;
+              break;
+            }
+          }
+        }
+    
+        // If no line shift is detected, we compare the words in the lines
+        if (!lineShiftDetected) {
+          if (line1 && line2) {
+            compareWords(line1, line2, pageIndex, instance1, instance2);
+          } else if (line1) {
+            createHighlightAnnotation(line1.boundingBox, 'DELETE', pageIndex, instance1);
+          } else if (line2) {
+            createHighlightAnnotation(line2.boundingBox, 'INSERT', pageIndex, instance2);
+          }
+    
+          i++;
+          j++;
+        }
+      }
+    }
+
+    function compareWords(line1, line2, pageIndex, instance1, instance2) {
+      let words1 = line1.words;
+      let words2 = line2.words;
+    
+      let i = 0, j = 0;
+      while (i < words1.length && j < words2.length) {
+        let word1 = words1[i];
+        let word2 = words2[j];
+    
+        if (word1.wordText === word2.wordText) {
+          i++;
+          j++;
+          continue;
+        }
+    
+        if (word1 && word2) {
+          let differingCharacters = compareCharacters(word1, word2);
+          if (differingCharacters.length <= 2) {
+            // Highlight individual characters if only two or less are different
+            for (const [char1, char2] of differingCharacters) {
+              let boundingBoxChar1 = {
+                top: word1.boundingBox.top,
+                left: char1.left,
+                width: char1.width,
+                height: word1.boundingBox.height
+              }
+              let boundingBoxChar2 = {
+                top: word2.boundingBox.top,
+                left: char2.left,
+                width: char2.width,
+                height: word2.boundingBox.height
+              }
+
+              createHighlightAnnotation(boundingBoxChar1, 'DELETE', pageIndex, instance1);
+              createHighlightAnnotation(boundingBoxChar2, 'INSERT', pageIndex, instance2);
+            }
+          } else {
+            // Highlight entire word if more than two characters are different
+            createHighlightAnnotation(word1.boundingBox, 'DELETE', pageIndex, instance1);
+            createHighlightAnnotation(word2.boundingBox, 'INSERT', pageIndex, instance2);
+          }
+          i++;
+          j++;
+        }
+      }
+    }
+    
+    function compareCharacters(word1, word2) {
+      let chars1 = word1.characters;
+      let chars2 = word2.characters;
+    
+      let differingCharacters = [];
+      let minLength = Math.min(chars1.length, chars2.length);
+    
+      for (let i = 0; i < minLength; i++) {
+        let char1 = chars1[i];
+        let char2 = chars2[i];
+    
+        if (char1.c !== char2.c) {
+          differingCharacters.push([char1, char2]);
+        }
+      }
+    
+      // Handle any remaining characters if the lengths of the two words are different
+      if (chars1.length !== chars2.length) {
+        for (let i = minLength; i < Math.max(chars1.length, chars2.length); i++) {
+          if (chars1[i]) {
+            differingCharacters.push([chars1[i], null]);
+          }
+          if (chars2[i]) {
+            differingCharacters.push([null, chars2[i]]);
+          }
+        }
+      }
+    
+      return differingCharacters;
+    }
+    
+    // The main offline compare function
+   let pageTextStructured1;
+   let pageTextStructured2;
     async function compareText(instance1, instance2){
       const totalPageCountLeft = instance1.totalPageCount;
       const totalPageCountRight = instance2.totalPageCount;
 
       const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
 
-      function createHighlightAnnotation(boundingBox, type, pageIndex, instance) {
-        const color = type === 'DELETE' ? PSPDFKit.Color.RED : PSPDFKit.Color.GREEN;
-        const note = type === 'DELETE' ? `Deleted` : `Inserted`;
-        pageIndex = 0;
-        const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
-          //note,
-          boundingBox: new PSPDFKit.Geometry.Rect(boundingBox), // Use the boundingBox parameter here.
-          pageIndex,
-          color,
-          opacity: 0.5,
-          rects: PSPDFKit.Immutable.List.of(new PSPDFKit.Geometry.Rect(boundingBox))
-        });
-      
-
-          instance.create(highlightAnnotation);
-      }
-      
-      async function compareDocuments(doc1, doc2, instance1, instance2) {
-        const pageIndex = 0;
-      
-        let i = 0, j = 0;
-        while (i < doc1.length || j < doc2.length) {
-          const line1 = doc1[i];
-          const line2 = doc2[j];
-      
-          // Both lines are the same, proceed to the next line in both documents
-          if (line1 && line2 && line1.lineText === line2.lineText) {
-            i++;
-            j++;
-            continue;
-          }
-      
-          // If we encounter different lines, we check for line shifts
-          let lineShiftDetected = false;
-      
-          // Check if the current line in doc1 appears further down in doc2
-          for (let k = j + 1; k < doc2.length; k++) {
-            if (line1 && line1.lineText === doc2[k].lineText) {
-              // Highlight lines in doc2[j:k] as 'INSERT'
-              for (let l = j; l < k; l++) {
-                createHighlightAnnotation(doc2[l].boundingBox, 'INSERT', pageIndex, instance2);
-              }
-              j = k;
-              lineShiftDetected = true;
-              break;
-            }
-          }
-      
-          // Check if the current line in doc2 appears further down in doc1
-          if (!lineShiftDetected) {
-            for (let k = i + 1; k < doc1.length; k++) {
-              if (line2 && line2.lineText === doc1[k].lineText) {
-                // Highlight lines in doc1[i:k] as 'DELETE'
-                for (let l = i; l < k; l++) {
-                  createHighlightAnnotation(doc1[l].boundingBox, 'DELETE', pageIndex, instance1);
-                }
-                i = k;
-                lineShiftDetected = true;
-                break;
-              }
-            }
-          }
-      
-          // If no line shift is detected, we compare the words in the lines
-          if (!lineShiftDetected) {
-            if (line1 && line2) {
-              compareWords(line1, line2, pageIndex, instance1, instance2);
-            } else if (line1) {
-              createHighlightAnnotation(line1.boundingBox, 'DELETE', pageIndex, instance1);
-            } else if (line2) {
-              createHighlightAnnotation(line2.boundingBox, 'INSERT', pageIndex, instance2);
-            }
-      
-            i++;
-            j++;
-          }
-        }
-      }
-
-      function compareWords(line1, line2, pageIndex, instance1, instance2) {
-        let words1 = line1.words;
-        let words2 = line2.words;
-      
-        let i = 0, j = 0;
-        while (i < words1.length && j < words2.length) {
-          let word1 = words1[i];
-          let word2 = words2[j];
-      
-          if (word1.wordText === word2.wordText) {
-            i++;
-            j++;
-            continue;
-          }
-      
-          if (word1 && word2) {
-            let differingCharacters = compareCharacters(word1, word2);
-            if (differingCharacters.length <= 2) {
-              // Highlight individual characters if only two or less are different
-              for (const [char1, char2] of differingCharacters) {
-                let boundingBoxChar1 = {
-                  top: word1.boundingBox.top,
-                  left: char1.left,
-                  width: char1.width,
-                  height: word1.boundingBox.height
-                }
-                let boundingBoxChar2 = {
-                  top: word2.boundingBox.top,
-                  left: char2.left,
-                  width: char2.width,
-                  height: word2.boundingBox.height
-                }
-
-                createHighlightAnnotation(boundingBoxChar1, 'DELETE', pageIndex, instance1);
-                createHighlightAnnotation(boundingBoxChar2, 'INSERT', pageIndex, instance2);
-              }
-            } else {
-              // Highlight entire word if more than two characters are different
-              createHighlightAnnotation(word1.boundingBox, 'DELETE', pageIndex, instance1);
-              createHighlightAnnotation(word2.boundingBox, 'INSERT', pageIndex, instance2);
-            }
-            i++;
-            j++;
-          }
-        }
-      }
-      
-      function compareCharacters(word1, word2) {
-        let chars1 = word1.characters;
-        let chars2 = word2.characters;
-      
-        let differingCharacters = [];
-        let minLength = Math.min(chars1.length, chars2.length);
-      
-        for (let i = 0; i < minLength; i++) {
-          let char1 = chars1[i];
-          let char2 = chars2[i];
-      
-          if (char1.c !== char2.c) {
-            differingCharacters.push([char1, char2]);
-          }
-        }
-      
-        // Handle any remaining characters if the lengths of the two words are different
-        if (chars1.length !== chars2.length) {
-          for (let i = minLength; i < Math.max(chars1.length, chars2.length); i++) {
-            if (chars1[i]) {
-              differingCharacters.push([chars1[i], null]);
-            }
-            if (chars2[i]) {
-              differingCharacters.push([null, chars2[i]]);
-            }
-          }
-        }
-      
-        return differingCharacters;
-      }
-      
       for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
         const [textLines1, textLines2] = await Promise.all([
           instance1.textLinesForPageIndex(pageIndex),
@@ -767,13 +756,14 @@
         console.log("text lines1");
         console.log(textLines1.toArray());
 
-        const pageTextStructured1 = buildTextStructure(textLines1.toArray(), glyphFormatted1);
-        const pageTextStructured2 = buildTextStructure(textLines2.toArray(), glyphFormatted2);
+        pageTextStructured1 = buildTextStructure(textLines1.toArray(), glyphFormatted1);
+        pageTextStructured2 = buildTextStructure(textLines2.toArray(), glyphFormatted2);
         console.log("pageTextStructured1");
         console.log(pageTextStructured1);
         console.log("pageTextStructured2");
         console.log(pageTextStructured2);
 
+        // The inner compare function
         compareDocuments(pageTextStructured1, pageTextStructured2, instance1, instance2);
 
       }
