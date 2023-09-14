@@ -468,9 +468,16 @@
          const totalPageCountRight = instance2.totalPageCount;
    
          const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
-   
+
          for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
-          compareDocuments(documentStructure1[pageIndex], documentStructure2[pageIndex], instance1, instance2);
+          let originalPage = null;
+          if(documentStructure1[pageIndex].originalPage !== null){
+            originalPage = documentStructure1[pageIndex].originalPage;
+          }
+          console.log("original page:");
+          console.log(originalPage);
+
+          compareDocuments(documentStructure1[pageIndex], documentStructure2[pageIndex], instance1, instance2, pageIndex, originalPage);
          }
         
       });
@@ -624,7 +631,7 @@
     function createHighlightAnnotation(boundingBox, type, pageIndex, instance) {
       const color = type === 'DELETE' ? PSPDFKit.Color.RED : PSPDFKit.Color.GREEN;
       const note = type === 'DELETE' ? `Deleted` : `Inserted`;
-      pageIndex = 0;
+
       const highlightAnnotation = new PSPDFKit.Annotations.HighlightAnnotation({
         //note,
         boundingBox: new PSPDFKit.Geometry.Rect(boundingBox), // Use the boundingBox parameter here.
@@ -638,8 +645,8 @@
         instance.create(highlightAnnotation);
     }
     
-    async function compareDocuments(doc1, doc2, instance1, instance2) {
-      const pageIndex = 0;
+    async function compareDocuments(doc1, doc2, instance1, instance2, pageIndex, originalPageIndex){
+      //const pageIndex = 0;
     
       let i = 0, j = 0;
       while (i < doc1.length || j < doc2.length) {
@@ -661,7 +668,7 @@
           if (line1 && line1.lineText === doc2[k].lineText) {
             // Highlight lines in doc2[j:k] as 'INSERT'
             for (let l = j; l < k; l++) {
-              createHighlightAnnotation(doc2[l].boundingBox, 'INSERT', pageIndex, instance2);
+                createHighlightAnnotation(doc2[l].boundingBox, 'INSERT', pageIndex, instance2);
             }
             j = k;
             lineShiftDetected = true;
@@ -675,7 +682,7 @@
             if (line2 && line2.lineText === doc1[k].lineText) {
               // Highlight lines in doc1[i:k] as 'DELETE'
               for (let l = i; l < k; l++) {
-                createHighlightAnnotation(doc1[l].boundingBox, 'DELETE', pageIndex, instance1);
+                createHighlightAnnotation(doc2[l].boundingBox, 'INSERT', pageIndex, instance2);
               }
               i = k;
               lineShiftDetected = true;
@@ -687,9 +694,14 @@
         // If no line shift is detected, we compare the words in the lines
         if (!lineShiftDetected) {
           if (line1 && line2) {
-            compareWords(line1, line2, pageIndex, instance1, instance2);
+            compareWords(line1, line2, pageIndex, originalPageIndex, instance1, instance2);
           } else if (line1) {
-            createHighlightAnnotation(line1.boundingBox, 'DELETE', pageIndex, instance1);
+            if(originalPageIndex){
+              createHighlightAnnotation(line1.boundingBox, 'DELETE', originalPageIndex, instance1);
+            }else{
+              createHighlightAnnotation(line1.boundingBox, 'DELETE', pageIndex, instance1);
+            }
+            
           } else if (line2) {
             createHighlightAnnotation(line2.boundingBox, 'INSERT', pageIndex, instance2);
           }
@@ -700,7 +712,7 @@
       }
     }
 
-    function compareWords(line1, line2, pageIndex, instance1, instance2) {
+    function compareWords(line1, line2, pageIndex, originalPageIndex,instance1, instance2) {
       let words1 = line1.words;
       let words2 = line2.words;
     
@@ -732,13 +744,27 @@
                 width: char2.width,
                 height: word2.boundingBox.height
               }
-              createHighlightAnnotation(boundingBoxChar1, 'DELETE', pageIndex, instance1);
+              if(originalPageIndex !== undefined){
+                createHighlightAnnotation(boundingBoxChar1, 'DELETE', originalPageIndex, instance1);
+              }else{
+                createHighlightAnnotation(boundingBoxChar1, 'DELETE', pageIndex, instance1);
+              }
+
               createHighlightAnnotation(boundingBoxChar2, 'INSERT', pageIndex, instance2);
+              
             }
           } else {
             // Highlight entire word if more than two characters are different
-            createHighlightAnnotation(word1.boundingBox, 'DELETE', pageIndex, instance1);
+            if(originalPageIndex !== undefined){
+              console.log("creating at originalPageIndex: " + originalPageIndex);
+              createHighlightAnnotation(word1.boundingBox, 'DELETE', originalPageIndex, instance1);
+            }else{
+              console.log("creating at pageIndex: " + pageIndex);
+              createHighlightAnnotation(word1.boundingBox, 'DELETE', pageIndex, instance1);
+            }
             createHighlightAnnotation(word2.boundingBox, 'INSERT', pageIndex, instance2);
+            
+            
           }
           i++;
           j++;
@@ -835,7 +861,7 @@
         documentStructure2.push(pageTextStructured2);
 
         // The inner compare function
-        compareDocuments(pageTextStructured1, pageTextStructured2, instance1, instance2);
+        compareDocuments(pageTextStructured1, pageTextStructured2, instance1, instance2, pageIndex, null);
 
       }
 
