@@ -1,0 +1,3 @@
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be removed.\"},{\"pageNumber\":1,\"pageText\":\"E-files, digital docs so fine.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine.\"},{\"pageNumber\":1,\"pageText\":\"This is a new page added!\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+}

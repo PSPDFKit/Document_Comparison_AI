@@ -368,8 +368,10 @@
      {"document2": [ { action: <added, removed, none>, compareTo: <pageIndex in document1 if action is none> }, ]}
      Your output should be strictly the json objects, no other text.`;
 
+     
      const userContent = "document1: " + documentTextJSON1 + " document2: " + documentTextJSON2;
-
+     console.log("Request going out:");
+     console.log(userContent);
 
       fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -398,6 +400,7 @@
         let resp = await response.json();
         console.log("response");
         let message = resp["choices"][0]["message"]["content"];
+        console.log("Response:");
         console.log(message);
 
         // Find the index where the second JSON object starts
@@ -823,7 +826,8 @@
 
     PSPDFKit.load({
       container: "#pspdfkitLeft",
-      document: "PDF poem v5.pdf",
+      //document: "PDF poem v5.pdf",
+      document: "PDF poem before.docx",
       toolbarItems: defaultItemsLeft,
       licenseKey: licenseKey
     })
@@ -854,6 +858,7 @@
     PSPDFKit.load({
       container: "#pspdfkitRight",
       document: "PDF poem v4.pdf",
+      //document: "PDF poem after.docx",
       toolbarItems: defaultItemsRight,
       licenseKey: licenseKey
 
