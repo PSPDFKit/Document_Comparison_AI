@@ -436,6 +436,7 @@
         // Shift documentStructure according to actions
         // Iterate through actionsArray and apply actions to documentStructure1
         documentActions1["document1"].forEach((actionObj, index) => {
+          
           if (actionObj.action === 'none') {
             // The index to move the current element to
             const targetIndex = actionObj.compareTo;
@@ -453,6 +454,12 @@
               // Now, the removedElement will have a new property called 'originalPage' 
               // that indicates the pageIndex it was originally on
             }
+          } 
+        });
+
+        documentActions2["document2"].forEach((actionObj, index) => {
+          if (actionObj.action === 'added') {
+            documentStructure1[index] = documentActions2[index];
           }
         });
 
