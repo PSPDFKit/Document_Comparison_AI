@@ -317,8 +317,8 @@
         documentText1.push({
           pageHash: pageSimhashes1,
           pageNumber: pageIndex,
-          //...simplifiedStructure1
-          pageText
+          ...simplifiedStructure1
+          //pageText
         });
 
       }
@@ -346,8 +346,8 @@
         documentText2.push({
           pageHash: pageSimhashes2,
           pageNumber: pageIndex,
-          //...simplifiedStructure2
-          pageText
+          ...simplifiedStructure2
+          //pageText
         });
       }
 
@@ -422,7 +422,9 @@
         checkActions(documentActions1.document1, instance1, false);
         checkActions(documentActions2.document2, instance2, true);
 
-        // Perform the regular document comparison again.   
+
+
+        // Shift the page content according to the actions 
         console.log("documentStructure1");
         console.log(documentStructure1);
         console.log("documentStructure2");
@@ -441,9 +443,15 @@
             if (targetIndex !== null && targetIndex !== index) {
               // Remove the element at the current index and store it
               const removedElement = documentStructure1.splice(index, 1)[0];
-
+              
+              // Add a new property to the removed element indicating its original pageIndex
+              removedElement.originalPage = index;
+              
               // Insert the element back at the target index
               documentStructure1.splice(targetIndex, 0, removedElement);
+              
+              // Now, the removedElement will have a new property called 'originalPage' 
+              // that indicates the pageIndex it was originally on
             }
           }
         });
@@ -455,7 +463,16 @@
         console.log(documentStructure1);
         console.log(documentStructure2);
 
-        compareDocuments(documentStructure1[1], documentStructure2[1], instance1, instance2);
+         // Perform the regular document comparison again.   
+         const totalPageCountLeft = instance1.totalPageCount;
+         const totalPageCountRight = instance2.totalPageCount;
+   
+         const smallerPageCount = Math.min(totalPageCountLeft, totalPageCountRight);
+   
+         for(let pageIndex = 0; pageIndex < smallerPageCount; pageIndex++) {
+          compareDocuments(documentStructure1[pageIndex], documentStructure2[pageIndex], instance1, instance2);
+         }
+        
       });
 
     }
@@ -827,7 +844,7 @@
     PSPDFKit.load({
       container: "#pspdfkitLeft",
       //document: "PDF poem v5.pdf",
-      document: "PDF poem before.docx",
+      document: "PDF poem before-v2.pdf",
       toolbarItems: defaultItemsLeft,
       licenseKey: licenseKey
     })
@@ -857,8 +874,8 @@
 
     PSPDFKit.load({
       container: "#pspdfkitRight",
-      document: "PDF poem v4.pdf",
-      //document: "PDF poem after.docx",
+      //document: "PDF poem v4.pdf",
+      document: "PDF poem after.pdf",
       toolbarItems: defaultItemsRight,
       licenseKey: licenseKey
 
