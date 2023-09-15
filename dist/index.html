@@ -1,18 +1,45 @@
 
 <html>
 <head>
-  <title>PSPDFKit Document Comparison V3</title>
+  <title>PSPDFKit for Web AI</title>
 </head>
 <style>
   #viewer-container {
     display: flex;
     height: 100vh;
   }
-
-  #viewer-container > div {
-    width: 50%;
-    height: 100%;
+  
+  #sidebar {
+    width: 25%;
+    background-color: #eee;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
   }
+  
+  #chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+  
+  #sidebar-text {
+    height: auto; /* Adjust based on how many rows you want visible */
+  }
+  
+  #send-button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+
+  #pspdfkitLeft {
+    flex-grow: 1;  /* This will make it occupy the remaining space */
+    width: 0;  /* Overcome the "flex-basis" issue */
+  }
+  
+  
 </style>
 <body>
   <div id="root"></div>
@@ -21,12 +48,40 @@
 
   <script src="./assets/pspdfkit.js"></script>
   <div id="viewer-container">
+    <div id="sidebar">
+      <div id="chat-messages"></div>
+      <textarea id="sidebar-text" rows="4"></textarea>
+      <button id="send-button">Send</button>
+    </div>
     <div id="pspdfkitLeft"></div>
-    <div id="pspdfkitRight"></div>
   </div>
 
 
   <script>
+    let userMessage;
+    document.addEventListener("DOMContentLoaded", function() {
+      const sendButton = document.getElementById("send-button");
+      const chatMessages = document.getElementById("chat-messages");
+      
+      sendButton.addEventListener("click", async function() {
+        userMessage = document.getElementById("sidebar-text").value;
+    
+        // Append the user message to the chat
+        const userMessageDiv = document.createElement("div");
+        userMessageDiv.className = "user-message";
+        userMessageDiv.textContent = `You: ${userMessage}`;
+        chatMessages.prepend(userMessageDiv);
+    
+        // Simulate an API call to get the chatbot response
+        const apiResponse = await chatPDFAI();
+    
+        // Append the chatbot message to the chat
+        const botMessageDiv = document.createElement("div");
+        botMessageDiv.className = "bot-message";
+        botMessageDiv.textContent = `Bot: ${apiResponse}`;
+        chatMessages.prepend(botMessageDiv);
+      });
+    });
 
     let licenseKey = 'vCR5dwIXsXHZsHQoufWEefkm8URHmt9zBymfQ5rWYpggjx_xYADpAXOHYxcdt_PbwurRb_c52uN5BrbRl0ta5wnVrcTnfSM4jASkm6QuPPiuhEI0xdglf_s-V-4aFMCK9u9XT0vJ3XPU4zyiMdem6Wd5sNvUEfP_fWPsbm1DnRMAJJl3vmXshBTlGtjlJYXwNn69OkOq6K9q7qGFHIx95iCXSQLSjRfpyEtWr0wjwLlUykC7tIt9qX8oGO-STn6hplnJzRWRFs_EdP4-YqzcLMaaY-GMKnOUSU5wrThJ7Bb6LJEWBTRX2XraeB6UFqM0rwMqcso8CnoDq1l3Qn_aNZS_6wmcj3K1azVL8NuMyBmu87nwzwlegvXjSqWIXHptd_FUqXX3Npze4CymDYNoRJuJy8s3bv1ikBvXkMKwQR8d1ayy8fs9tzcRyWamyzfzsCNjv1duLSGIkluTxIZMeYU2hd3nsFsFY7Bnot2MLGZI2udJ7iIFTx3QBS_zRFdQjJ_FLl9viOFVtjG_Rklfzqvn2675leoU7de7DBUOnUWQk8oZRUAvMmber1GzORnKeE1M37Wd5YxS20tQYrjRNr0BdaTOMEUshCyCI1EEjWrCy_zdlng2l2jZtrlYZkNsEwiGz8Cvn9UtmgVHg0UQPfzDYB8tk7Hv51rh5RR9xEllaFZMc82py7G_GjSHIRLyKJWiD_eaHbWxPEnzZszNhmqpA6Jx4Y-jVAPE-bub3LG6dd5nfzCHlbMOJTiNPHrSayPmX3QRTV14MpDcyRu8uZGhalXvx3IYcMPx_SLEXattbzdcT6OWH6nFmmrztq63pJ2IgnfDbeZ0XlarWKu0SYEMAq8fBl41tFFVYdztD6PU2qULlY3SyTQyL_FnQxw4oSgFTBXeyr80Mlj03FZf710WxYF1-JuWUQq4GlOlknuXqmVdjgCF4R__lKm0IPr0xCvTq4r5f9t7zXP3LT12QcQ5QtRXPi6By11pZMkTlKGbfzRbDuf2ksVAMhOSuPmYf3C-xZBdPGvm6r95ltSFxIdYNILrwJ2IjYs2RW3JxDWFpwK4MYpEiADzQP3SiKBgqKncfTcInoFmd5kM8mFddavDbw4uoaNLIUaSXphq_qgucHk5LQP7sHFjzfqVVWxYR_U6_NUZyvpUn-1Wv6YO9K5JzeR-lnCTxOxPIE-iA01qDhj2lZ-sJYy_zK0D19uPk9b8agtDudqWlQPebCtc6cHpfe3Wq16rlwiFheL4pVI=';
 
@@ -167,7 +222,6 @@
     
       return simplifiedArray;
     }
-    
 
     // Sample FNV-1a hash function for simplicity
     function hashFnv32a(str) {
@@ -493,6 +547,129 @@
 
     }
 
+    let globalInstance;
+    async function chatPDFAI() {
+
+      return new Promise(async (resolve, reject) => {
+      
+      let instance1 = globalInstance;
+      let totalPageCountLeft = instance1.totalPageCount;
+      let documentText1 = [];
+
+       // Calculate Simhash for each page
+       //const pageSimhashes1 = calculatePageSimhash(documentText1);
+       //console.log('Simhash for document 1:', pageSimhashes1);
+
+      // Get the text for the left document
+      let linesDocument = [];
+      for(let pageIndex = 0; pageIndex < totalPageCountLeft; pageIndex++) {
+        const textLines1 = await Promise.all([
+          instance1.textLinesForPageIndex(pageIndex)
+        ]);
+
+        // Get glyphs for each instance with their position in CSV format
+        let glyphs1 = await instance1.getPageGlyphs(pageIndex);
+        let glyphFormatted1 = getFormattedGlyps(glyphs1);
+        let linesInstance1 = await instance1.textLinesForPageIndex(pageIndex);
+        linesDocument.push({
+          "pageNumber":pageIndex,
+          "lines":linesInstance1.toArray()
+        });
+
+        let textStructure1 = buildTextStructure(linesInstance1.toArray(), glyphFormatted1);
+        console.log("textStructure1");
+        console.log(textStructure1);
+        let simplifiedStructure1 = simplifyArray(textStructure1);
+        const pageSimhashes1 = calculatePageSimhash(simplifiedStructure1);
+        //console.log('Simhash for document 2:', pageSimhashes1);
+
+        let pageText = combinePagesToSinglePage(simplifiedStructure1);
+
+        documentText1.push({
+          pageHash: pageSimhashes1,
+          pageNumber: pageIndex,
+          ...simplifiedStructure1
+          //pageText
+        });
+
+      }
+
+      let documentTextJSON1 = JSON.stringify(documentText1);
+
+     const instructions = `i want to help a user track what changed from document1 (which is version1) to document2 (which is version2 of the same document). please look at the content of the pages and the page hashes and let me know which pages do you think were added/removed or remained largely the same (except for some minor content changes) from document1 to document2.
+     the output should be in the format of an array for each document. the array document1 and document2 have elements for each page they contain. if a page is present in document1 but not in document2, it's action is deleted and compareTo is null. If the page is still present in document2 (even though the content has changed slightly) the action is none and compareTo is the corresponding page index in document2. if a page that is not in document1 but in document2, it counds as action "added".
+     {"document1": [ { action: <added, removed, none>, compareTo: <pageIndex in document2 if action is none> }, ]}
+     {"document2": [ { action: <added, removed, none>, compareTo: <pageIndex in document1 if action is none> }, ]}
+     Your output should be strictly the json objects, no other text.`;
+
+    const instructions2 = `i want you to answer the following question by the user and reply with a json object of line numbers that affect the questions so that i can highlight those lines with pspdfkit. your reply should stricly be an array in the format [{"pageNumber":0, "lineNumber": 1},...] ` + userMessage;
+
+     const userContent = "document1: " + documentTextJSON1;
+     console.log("Request going out:");
+     console.log(userContent);
+
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer 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'
+        },
+        body: JSON.stringify({
+          "model": "gpt-4",
+          "temperature": 0,
+          "messages": [
+          {
+            "role": "system",
+            //"content": instructions,
+            "content": instructions2,
+          },
+            {
+              "role": "user",
+              content: userContent,
+              //"content": "CSV1: " + glyphFormatted1 + " CSV2: " + glyphFormatted2,
+              //"content": userContent,
+            }
+          ]
+        })
+      })
+      .then(async response => {
+
+        let resp = await response.json();
+        console.log("response");
+        let message = resp["choices"][0]["message"]["content"];
+        console.log("Response:");
+        console.log(message);
+        
+        const linesToHighlight = JSON.parse(message);
+        console.log(linesToHighlight);
+        console.log("total lines available");
+        console.log(linesDocument);
+
+        // Loop through your parsed JSON object
+        linesToHighlight.forEach((item) => {
+          // Extract pageNumber and lineNumber
+          const { pageNumber, lineNumber } = item;
+        
+          // Find the corresponding page in boundingBoxData
+          const page = linesDocument.find(page => page.pageNumber === pageNumber);
+        
+          if (page) {
+            // Find the corresponding line in the page
+            const line = page.lines[lineNumber];
+            if (line) {
+              // Call your createHighlightAnnotation function
+              // Assuming that line has a property "boundingBox"
+              createHighlightAnnotation(line.boundingBox, 'INSERT', pageNumber, instance1);
+            }
+          }
+        });
+
+        resolve(message);
+      });
+      });
+    }
+
+
     function getFormattedGlyps(glyphs){
 
       function truncateNumbers(obj) {
@@ -637,7 +814,7 @@
       return structure;
   }
   
-    function createHighlightAnnotation(boundingBox, type, pageIndex, instance) {
+    async function createHighlightAnnotation(boundingBox, type, pageIndex, instance) {
       const color = type === 'DELETE' ? PSPDFKit.Color.RED : PSPDFKit.Color.GREEN;
       const note = type === 'DELETE' ? `Deleted` : `Inserted`;
 
@@ -651,7 +828,9 @@
       });
     
 
-        instance.create(highlightAnnotation);
+        let createdAnnot = await instance.create(highlightAnnotation);
+        console.log(createdAnnot[0]);
+        instance.jumpAndZoomToRect(createdAnnot[0].pageIndex, createdAnnot[0].boundingBox);
     }
     
     async function compareDocuments(doc1, doc2, instance1, instance2, pageIndex, originalPageIndex){
@@ -886,21 +1065,26 @@
     .then(async function(instance) {
       console.log("PSPDFKit Left loaded", instance);
       leftViewer = instance;
+      globalInstance = instance;
 
       // Add event listeners for the left viewer to sync its state to the right viewer
       let scrollElement = leftViewer.contentDocument.querySelector(".PSPDFKit-Scroll");
-      scrollElement.addEventListener("scroll", syncViewStateLeft);
+      //scrollElement.addEventListener("scroll", syncViewStateLeft);
 
       // TODO: Needed when viewer is in single page mode
       //instance.addEventListener("viewState.currentPageIndex.change", syncViewState);
       instance.addEventListener("viewState.zoom.change", syncViewStateLeft);
 
       window.setTimeout(() => {
+
+
+        if(leftViewer){
+
+        }
+
         if (leftViewer && rightViewer) {
-          alert("Comparing Documents Clientside...");
-          compareText(leftViewer, rightViewer);
-          
-          compareTextAI(leftViewer, rightViewer, 0);
+          //compareText(leftViewer, rightViewer);
+          //compareTextAI(leftViewer, rightViewer, 0);
         }
       }, 250);
 
