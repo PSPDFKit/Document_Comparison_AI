@@ -397,6 +397,8 @@
         })
       })
       .then(async response => {
+        alert("Comparing Documents with AI...");
+
         let resp = await response.json();
         console.log("response");
         let message = resp["choices"][0]["message"]["content"];
@@ -895,7 +897,9 @@
 
       window.setTimeout(() => {
         if (leftViewer && rightViewer) {
+          alert("Comparing Documents Clientside...");
           compareText(leftViewer, rightViewer);
+          
           compareTextAI(leftViewer, rightViewer, 0);
         }
       }, 250);
