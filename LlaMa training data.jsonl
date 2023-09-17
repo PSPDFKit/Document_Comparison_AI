@@ -1,0 +1,174 @@
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be removed.\"},{\"pageNumber\":1,\"pageText\":\"E-files, digital docs so fine.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine.\"},{\"pageNumber\":1,\"pageText\":\"This is a new page added!\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be removed.\"},{\"pageNumber\":1,\"pageText\":\"PDFs, digital docs so fine,With pages of text and images combined.They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and ink,Forever changing the way we think. \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.E-files, the future of paper and ink,Forever altering the way we think. \"},{\"pageNumber\":1,\"pageText\":\"This page was added!\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"PDFs, digital docs so fine,With pages of text and images combined.They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and ink,Forever changing the way we think. \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.E-files, the future of paper and ink,Forever altering the way we think. \"},{\"pageNumber\":1,\"pageText\":\"This page was added!\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"E-Files, digital docs so fine,With pages of text and images combined.They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and ink,Forever changing the way we think. \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.E-files, the future of paper and ink,Forever altering the way we think. \"},{\"pageNumber\":1,\"pageText\":\"This page was added!\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and ink,Forever changing the way we think. \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.E-files, the future of paper and ink,Forever altering the way we think. \"},{\"pageNumber\":1,\"pageText\":\"This page was added!\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and ink,Forever changing the way we think. \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.E-files, the future of paper and ink,Forever altering the way we think. \"},{\"pageNumber\":1,\"pageText\":\"This page was added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and ink,Forever changing the way we think. \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame. \"},{\"pageNumber\":1,\"pageText\":\"This page was added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and ink,Forever changing the way we think. \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same \"},{\"pageNumber\":1,\"pageText\":\"This page was added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and i \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same \"},{\"pageNumber\":1,\"pageText\":\"This page was added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This page will be.\"},{\"pageNumber\":1,\"pageText\":\"They travel far and wide,Their content secure and locked inside.From contracts to books, they hold much data, A wealth of wisdom, just a simple touch to get a. Easily accessible, just a click,Their versatility, a clever trick.No matter the platform, they remain the same, Their format universal, their fame remains in the frame.PDFs, the future of paper and i \"}] document2: [{\"pageNumber\":0,\"pageText\":\"E-files, digital docs so fine,With pages of text and images combined!They travel far and wide,Their content secure and locked inside.From contracts to e-books, they hold much data, A wealth of wisdom, just a simple touch to get a.  \"},{\"pageNumber\":1,\"pageText\":\"This page was added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"To be removed.\"},{\"pageNumber\":1,\"pageText\":\"Unchanged text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Unchanged text.\"},{\"pageNumber\":1,\"pageText\":\"Newly added page.\"}]  ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Erase this page.\"},{\"pageNumber\":1,\"pageText\":\"Same as doc2.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Same as doc1.\"},{\"pageNumber\":1,\"pageText\":\"Additional page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Delete this page.\"},{\"pageNumber\":1,\"pageText\":\"Static content.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Static content.\"},{\"pageNumber\":1,\"pageText\":\"New content.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Remove me.\"},{\"pageNumber\":1,\"pageText\":\"Identical text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Identical text.\"},{\"pageNumber\":1,\"pageText\":\"Brand new page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Gone soon.\"},{\"pageNumber\":1,\"pageText\":\"Equal content.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Equal content.\"},{\"pageNumber\":1,\"pageText\":\"Freshly added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This will be gone.\"},{\"pageNumber\":1,\"pageText\":\"Same here.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Same here.\"},{\"pageNumber\":1,\"pageText\":\"Added this page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Take this out.\"},{\"pageNumber\":1,\"pageText\":\"Constant content.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Constant content.\"},{\"pageNumber\":1,\"pageText\":\"New text here.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"This is to be removed.\"},{\"pageNumber\":1,\"pageText\":\"Persistent text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Persistent text.\"},{\"pageNumber\":1,\"pageText\":\"Just added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Scheduled for removal.\"},{\"pageNumber\":1,\"pageText\":\"No changes.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"No changes.\"},{\"pageNumber\":1,\"pageText\":\"New page content.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"To be deleted.\"},{\"pageNumber\":1,\"pageText\":\"Same text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Same text.\"},{\"pageNumber\":1,\"pageText\":\"Recently added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Will be deleted.\"},{\"pageNumber\":1,\"pageText\":\"No alterations.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"No alterations.\"},{\"pageNumber\":1,\"pageText\":\"New insert.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Remove this page.\"},{\"pageNumber\":1,\"pageText\":\"Unaltered.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Unaltered.\"},{\"pageNumber\":1,\"pageText\":\"Brand-new page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Erase this.\"},{\"pageNumber\":1,\"pageText\":\"Stays the same.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Stays the same.\"},{\"pageNumber\":1,\"pageText\":\"Addition.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Delete.\"},{\"pageNumber\":1,\"pageText\":\"Remains.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Remains.\"},{\"pageNumber\":1,\"pageText\":\"New.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Wipe out.\"},{\"pageNumber\":1,\"pageText\":\"No change.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"No change.\"},{\"pageNumber\":1,\"pageText\":\"Fresh page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Vanish.\"},{\"pageNumber\":1,\"pageText\":\"Same old.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Same old.\"},{\"pageNumber\":1,\"pageText\":\"Just added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Disappear.\"},{\"pageNumber\":1,\"pageText\":\"Stable.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Stable.\"},{\"pageNumber\":1,\"pageText\":\"Add-on.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Eliminate this.\"},{\"pageNumber\":1,\"pageText\":\"Steady.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Steady.\"},{\"pageNumber\":1,\"pageText\":\"Addition made.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Eject this.\"},{\"pageNumber\":1,\"pageText\":\"Static.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Static.\"},{\"pageNumber\":1,\"pageText\":\"Additional.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Remove from view.\"},{\"pageNumber\":1,\"pageText\":\"Unchanged.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Unchanged.\"},{\"pageNumber\":1,\"pageText\":\"Added page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"To be omitted.\"},{\"pageNumber\":1,\"pageText\":\"No change.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"No change.\"},{\"pageNumber\":1,\"pageText\":\"Fresh content.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"To be erased.\"},{\"pageNumber\":1,\"pageText\":\"Stable content.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Stable content.\"},{\"pageNumber\":1,\"pageText\":\"Just added this.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Marked for deletion.\"},{\"pageNumber\":1,\"pageText\":\"Same copy.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Same copy.\"},{\"pageNumber\":1,\"pageText\":\"Newly created.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"To be discarded.\"},{\"pageNumber\":1,\"pageText\":\"Fixed content.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Fixed content.\"},{\"pageNumber\":1,\"pageText\":\"Brand-new content.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Will be removed.\"},{\"pageNumber\":1,\"pageText\":\"Unmodified text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Unmodified text.\"},{\"pageNumber\":1,\"pageText\":\"New addition.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"For removal.\"},{\"pageNumber\":1,\"pageText\":\"Consistent text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Consistent text.\"},{\"pageNumber\":1,\"pageText\":\"Page added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Erasing this one.\"},{\"pageNumber\":1,\"pageText\":\"Text stays.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Text stays.\"},{\"pageNumber\":1,\"pageText\":\"Fresh addition.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Gonna remove.\"},{\"pageNumber\":1,\"pageText\":\"No modifications.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"No modifications.\"},{\"pageNumber\":1,\"pageText\":\"Just added.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Set for removal.\"},{\"pageNumber\":1,\"pageText\":\"Untouched content.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Untouched content.\"},{\"pageNumber\":1,\"pageText\":\"This is new.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"To be taken off.\"},{\"pageNumber\":1,\"pageText\":\"Stays as is.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Stays as is.\"},{\"pageNumber\":1,\"pageText\":\"New material.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Omitted soon.\"},{\"pageNumber\":1,\"pageText\":\"Remains unchanged.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Remains unchanged.\"},{\"pageNumber\":1,\"pageText\":\"A new page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Take off list.\"},{\"pageNumber\":1,\"pageText\":\"Static content.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Static content.\"},{\"pageNumber\":1,\"pageText\":\"Page inserted.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Subject to removal.\"},{\"pageNumber\":1,\"pageText\":\"Not changed.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Not changed.\"},{\"pageNumber\":1,\"pageText\":\"Additional content.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Ready for deletion.\"},{\"pageNumber\":1,\"pageText\":\"Status quo.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Status quo.\"},{\"pageNumber\":1,\"pageText\":\"Extra page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"For deletion.\"},{\"pageNumber\":1,\"pageText\":\"Retained text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Retained text.\"},{\"pageNumber\":1,\"pageText\":\"More content.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Going to be deleted.\"},{\"pageNumber\":1,\"pageText\":\"Unchanged data.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Unchanged data.\"},{\"pageNumber\":1,\"pageText\":\"More data.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Discard this.\"},{\"pageNumber\":1,\"pageText\":\"Content remains.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Content remains.\"},{\"pageNumber\":1,\"pageText\":\"Supplementary content.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Being removed.\"},{\"pageNumber\":1,\"pageText\":\"No modifications made.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"No modifications made.\"},{\"pageNumber\":1,\"pageText\":\"Supplementary page.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"Queue for removal.\"},{\"pageNumber\":1,\"pageText\":\"Constant.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Constant.\"},{\"pageNumber\":1,\"pageText\":\"Additional.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+},
+{
+  "text": "### Human: document1: [{\"pageNumber\":0,\"pageText\":\"To be nixed.\"},{\"pageNumber\":1,\"pageText\":\"Constant text.\"}] document2: [{\"pageNumber\":0,\"pageText\":\"Constant text.\"},{\"pageNumber\":1,\"pageText\":\"Addition.\"}] ### Assistant: {\"document1\": [ { \"action\": \"removed\", \"compareTo\": null }, { \"action\": \"none\", \"compareTo\": 0 } ]} {\"document2\": [ { \"action\": \"none\", \"compareTo\": 1 }, { \"action\": \"added\", \"compareTo\": null } ]}"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
